@@ -1,6 +1,6 @@
 import { ExecutionEnviornment } from "@/lib/types";
 import { ExtractDataWithAiTask } from "../task/ExtractDataWithAi";
-import prisma from "@/lib/prisma";
+import initDB, { Credential } from "@/lib/prisma";
 import { symmetricDecrypt } from "@/lib/credential";
 import OpenAi from "openai";
 
@@ -24,11 +24,8 @@ export async function ExtractDataWithAiExecutor(
       return false;
     }
 
-    const credential = await prisma.credential.findUnique({
-      where: {
-        id: credentialId,
-      },
-    });
+    await initDB();
+    const credential = await Credential.findById(credentialId);
 
     if (!credential) {
       enviornment.log.error("Credential no found");

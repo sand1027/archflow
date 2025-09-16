@@ -1,15 +1,11 @@
-import { PrismaClient } from "@prisma/client";
+import connectDB from './mongodb';
+import * as models from './models';
 
-const prismaClientSingleton = () => {
-  return new PrismaClient();
+// Initialize database connection
+const initDB = async () => {
+  await connectDB();
+  return models;
 };
 
-declare const globalThis: {
-  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
-} & typeof global;
-
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
-
-export default prisma;
-
-if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma;
+export default initDB;
+export * from './models';

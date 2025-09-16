@@ -1,7 +1,7 @@
 import "server-only";
 import Stripe from "stripe";
 import { getCreditsPack, PackId } from "../billing";
-import prisma from "../prisma";
+import initDB, { UserBalance, UserPurchase } from "../prisma";
 
 export async function handleCheckoutSessionCompleted(
   event: Stripe.Checkout.Session
@@ -24,28 +24,28 @@ export async function handleCheckoutSessionCompleted(
     throw new Error("Purchase pack not found");
   }
 
-  await prisma.userBalance.upsert({
-    where: {
-      userId,
-    },
-    create: {
+  await initDB();
+  
+  // Update or create user balance
+  const existingBalance = await UserBalance.findOne({ userId });
+  if (existingBalance) {
+    await UserBalance.findOneAndUpdate(
+      { userId },
+      { $inc: { credits: purchasedPack.credits } }
+    );
+  } else {
+    await UserBalance.create({
       userId,
       credits: purchasedPack.credits,
-    },
-    update: {
-      credits: {
-        increment: purchasedPack.credits,
-      },
-    },
-  });
+    });
+  }
 
-  await prisma.userPurchase.create({
-    data: {
-      userId,
-      stripeId: event.id,
-      description: `${purchasedPack.name} - ${purchasedPack.credits} credits`,
-      amount: event.amount_total!,
-      currency: event.currency!,
-    },
+  // Create purchase record
+  await UserPurchase.create({
+    userId,
+    stripeId: event.id,
+    description: `${purchasedPack.name} - ${purchasedPack.credits} credits`,
+    amount: event.amount_total!,
+    currency: event.currency!,
   });
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { periodToDateRange } from "@/lib/helper";
-import prisma from "@/lib/prisma";
+import initDB, { WorkflowExecution, ExecutionPhase } from "@/lib/prisma";
 import {
   ExecutionPhaseStatus,
   Period,
@@ -18,19 +18,12 @@ export async function getPeriods() {
     throw new Error("Unauthenticated");
   }
 
-  const years = await prisma.workflowExecution.aggregate({
-    where: {
-      userId,
-    },
-    _min: {
-      startedAt: true,
-    },
-  });
+  await initDB();
+  const executions = await WorkflowExecution.find({ userId }).sort({ startedAt: 1 }).limit(1);
 
   const currentYear = new Date().getFullYear();
-
-  const minYear = years._min.startedAt
-    ? years._min.startedAt.getFullYear()
+  const minYear = executions.length > 0 && executions[0].startedAt
+    ? executions[0].startedAt.getFullYear()
     : currentYear;
 
   const periods: Period[] = [];
@@ -52,29 +45,15 @@ export async function getStatsCardsValue(period: Period) {
 
   const dateRange = periodToDateRange(period);
 
-  const executions = await prisma.workflowExecution.findMany({
-    where: {
-      userId,
-      startedAt: {
-        gte: dateRange.startDate,
-        lte: dateRange.endDate,
-      },
-      status: {
-        in: [WorkflowExecutionStatus.COMPLETED, WorkflowExecutionStatus.FAILED],
-      },
+  await initDB();
+  const executions = await WorkflowExecution.find({
+    userId,
+    startedAt: {
+      $gte: dateRange.startDate,
+      $lte: dateRange.endDate,
     },
-    select: {
-      creditsConsumed: true,
-      phases: {
-        where: {
-          creditsConsumed: {
-            not: null,
-          },
-        },
-        select: {
-          creditsConsumed: true,
-        },
-      },
+    status: {
+      $in: [WorkflowExecutionStatus.COMPLETED, WorkflowExecutionStatus.FAILED],
     },
   });
 
@@ -84,14 +63,18 @@ export async function getStatsCardsValue(period: Period) {
     phaseExecutions: 0,
   };
 
+  // Get phases for credit calculation
+  const executionIds = executions.map(e => e._id);
+  const phases = await ExecutionPhase.find({
+    workflowExecutionId: { $in: executionIds },
+    creditsConsumed: { $ne: null }
+  });
+
   stats.creditsConsumed = executions.reduce(
-    (sum, execution) => sum + execution.creditsConsumed,
+    (sum, execution) => sum + (execution.creditsConsumed || 0),
     0
   );
-  stats.phaseExecutions = executions.reduce(
-    (sum, execution) => sum + execution.phases.length,
-    0
-  );
+  stats.phaseExecutions = phases.length;
 
   return stats;
 }
@@ -105,16 +88,15 @@ export async function getWorkflowExecutionsStats(period: Period) {
 
   const dateRange = periodToDateRange(period);
 
-  const executions = await prisma.workflowExecution.findMany({
-    where: {
-      userId,
-      startedAt: {
-        gte: dateRange.startDate,
-        lte: dateRange.endDate,
-      },
-      status: {
-        in: [ExecutionPhaseStatus.COMPLETED, ExecutionPhaseStatus.FAILED],
-      },
+  await initDB();
+  const executions = await WorkflowExecution.find({
+    userId,
+    startedAt: {
+      $gte: dateRange.startDate,
+      $lte: dateRange.endDate,
+    },
+    status: {
+      $in: [ExecutionPhaseStatus.COMPLETED, ExecutionPhaseStatus.FAILED],
     },
   });
 
@@ -150,6 +132,7 @@ export async function getWorkflowExecutionsStats(period: Period) {
 
   return result;
 }
+
 export async function getCreditsUsageInPeriod(period: Period) {
   const { userId } = await auth();
 
@@ -159,13 +142,12 @@ export async function getCreditsUsageInPeriod(period: Period) {
 
   const dateRange = periodToDateRange(period);
 
-  const executionsPhases = await prisma.workflowExecution.findMany({
-    where: {
-      userId,
-      startedAt: {
-        gte: dateRange.startDate,
-        lte: dateRange.endDate,
-      },
+  await initDB();
+  const executionsPhases = await WorkflowExecution.find({
+    userId,
+    startedAt: {
+      $gte: dateRange.startDate,
+      $lte: dateRange.endDate,
     },
   });
 

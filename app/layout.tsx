@@ -8,8 +8,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Flow srape",
-  description: "Build your own flow and scrape data with ease",
+  title: "WorkFlex",
+  description: "Build your own workflows and automate tasks with ease",
   openGraph: {
     images: `${process.env.APP_URL}/og-image.png`,
   },
@@ -33,8 +33,8 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
           <AppProviders>{children}</AppProviders>
+          <Toaster richColors />
         </body>
-        <Toaster richColors />
       </html>
     </ClerkProvider>
   );

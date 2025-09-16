@@ -64,9 +64,9 @@ export const HoverEffect = ({
                 ${item.price}
               </span>
               <span className="">{item.description}</span>
-              <div className="text-white bg-primary px-10 py-2 rounded-md text-center">
+              <span className="text-white bg-primary px-10 py-2 rounded-md text-center">
                 Buy Now
-              </div>
+              </span>
             </CardDescription>
           </Card>
         </Link>
@@ -116,13 +116,13 @@ export const CardDescription = ({
   children: React.ReactNode;
 }) => {
   return (
-    <p
+    <div
       className={cn(
         "mt-8 text-zinc-400 tracking-wide leading-relaxed text-sm",
         className
       )}
     >
       {children}
-    </p>
+    </div>
   );
 };

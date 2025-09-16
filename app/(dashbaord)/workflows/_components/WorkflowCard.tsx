@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { WorkflowExecutionStatus, WorkflowStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Workflow } from "@prisma/client";
+// Workflow type is now inferred from Mongoose model
 import {
   ChevronRightIcon,
   ClockIcon,
@@ -34,7 +34,7 @@ const statusColor = {
   [WorkflowStatus.PUBLISHED]: "bg-primary",
 };
 
-function WorkflowCard({ workflow }: { workflow: Workflow }) {
+function WorkflowCard({ workflow }: { workflow: any }) {
   const isDraft = workflow.status === WorkflowStatus.DRAFT;
   return (
     <Card className="border border-separate shadow-sm rounded-lg overflow-hidden hover:shadow-md dark:shadow-primary/30 group/card">
@@ -55,7 +55,7 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
           <div>
             <h3 className="text-base font-bold text-muted-foreground flex items-center">
               <TooltipWrapper content={workflow.description!}>
-                <Link href={`/workflow/editor/${workflow.id}`}>
+                <Link href={`/workflow/editor/${workflow._id}`}>
                   {workflow.name}
                 </Link>
               </TooltipWrapper>
@@ -65,7 +65,7 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
                 </span>
               )}
               <DuplicateWorkflowDialog
-                workflowId={workflow.id}
+                workflowId={workflow._id.toString()}
                 name={workflow.name}
                 description={workflow.description || ""}
               />
@@ -73,15 +73,15 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
             <SchedulerSection
               isDraft={isDraft}
               creditsCost={workflow.creditsCost}
-              workflowId={workflow.id}
+              workflowId={workflow._id.toString()}
               workflowCron={workflow.cron}
             />
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          {!isDraft && <RunButton workflowId={workflow.id} />}
+          {!isDraft && <RunButton workflowId={workflow._id.toString()} />}
           <Link
-            href={`/workflow/editor/${workflow.id}`}
+            href={`/workflow/editor/${workflow._id}`}
             className={cn(
               buttonVariants({ variant: "outline", size: "sm" }),
               "flex items-center p-4"
@@ -92,7 +92,7 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
           </Link>
           <WorkflowActions
             workflowName={workflow.name}
-            workflowId={workflow.id}
+            workflowId={workflow._id.toString()}
           />
         </div>
       </CardContent>
@@ -140,7 +140,7 @@ function SchedulerSection({
   );
 }
 
-function LastRunDetails({ workflow }: { workflow: Workflow }) {
+function LastRunDetails({ workflow }: { workflow: any }) {
   const isDraft = workflow.status === WorkflowStatus.DRAFT;
 
   if (isDraft) return null;
@@ -158,7 +158,7 @@ function LastRunDetails({ workflow }: { workflow: Workflow }) {
       <div className="flex items-center text-sm gap-2">
         {lastRunAt && (
           <Link
-            href={`/workflow/runs/${workflow.id}/${lastRunId}`}
+            href={`/workflow/runs/${workflow._id}/${lastRunId}`}
             className="flex items-center text-sm gap-2 group"
           >
             <span>Last run:</span>

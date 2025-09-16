@@ -1,7 +1,8 @@
 "use server";
 
 import { calculateWorkflowCost } from "@/lib/helper";
-import prisma from "@/lib/prisma";
+import { serializeForClient } from "@/lib/serialize";
+import initDB, { Workflow, WorkflowExecution, ExecutionPhase, ExecutionLog } from "@/lib/prisma";
 import { AppNode, TaskType, WorkflowStatus } from "@/lib/types";
 import { createFlowNode } from "@/lib/workflow/CreateFlowNode";
 import { flowToExecutionPlan } from "@/lib/workflow/executionPlan";
@@ -22,10 +23,8 @@ export async function getWorkflowsForUser() {
   if (!userId) {
     throw new Error("Unauthenticated");
   }
-  return prisma.workflow.findMany({
-    where: { userId },
-    orderBy: { createdAt: "asc" },
-  });
+  await initDB();
+  return Workflow.find({ userId }).sort({ createdAt: 1 }).lean();
 }
 
 export async function createWorkflow(form: createWorkflowShemaType) {
@@ -46,19 +45,18 @@ export async function createWorkflow(form: createWorkflowShemaType) {
     edges: [],
   };
   initWorkflow.nodes.push(createFlowNode(TaskType.LAUNCH_BROWSER));
-  const result = await prisma.workflow.create({
-    data: {
-      userId,
-      status: WorkflowStatus.DRAFT,
-      definition: JSON.stringify(initWorkflow),
-      ...data,
-    },
+  await initDB();
+  const result = await Workflow.create({
+    userId,
+    status: WorkflowStatus.DRAFT,
+    definition: JSON.stringify(initWorkflow),
+    ...data,
   });
   if (!result) {
     throw new Error("Failed to create workflow");
   }
 
-  redirect(`/workflow/editor/${result.id}`);
+  redirect(`/workflow/editor/${result._id}`);
 }
 
 export async function deleteWorkflow(workflowId: string) {
@@ -68,12 +66,8 @@ export async function deleteWorkflow(workflowId: string) {
     throw new Error("Unauthenticated");
   }
 
-  await prisma.workflow.delete({
-    where: {
-      userId,
-      id: workflowId,
-    },
-  });
+  await initDB();
+  await Workflow.findOneAndDelete({ _id: workflowId, userId });
 
   revalidatePath("/workflows");
 }
@@ -91,12 +85,8 @@ export async function updateWorkFlow({
     throw new Error("Unauthenticated");
   }
 
-  const workflow = await prisma.workflow.findUnique({
-    where: {
-      id,
-      userId,
-    },
-  });
+  await initDB();
+  const workflow = await Workflow.findOne({ _id: id, userId });
 
   if (!workflow) {
     throw new Error("Workflow not found");
@@ -106,15 +96,10 @@ export async function updateWorkFlow({
     throw new Error("Workflow is not draft");
   }
 
-  await prisma.workflow.update({
-    data: {
-      definition,
-    },
-    where: {
-      id,
-      userId,
-    },
-  });
+  await Workflow.findOneAndUpdate(
+    { _id: id, userId },
+    { definition, updatedAt: new Date() }
+  );
   revalidatePath("/workflows");
 }
 
@@ -125,16 +110,12 @@ export async function getWorkflowExecutionWithPhases(executionId: string) {
     throw new Error("Unauthenticated");
   }
 
-  return prisma.workflowExecution.findUnique({
-    where: { id: executionId, userId },
-    include: {
-      phases: {
-        orderBy: {
-          number: "asc",
-        },
-      },
-    },
-  });
+  await initDB();
+  const execution = await WorkflowExecution.findOne({ _id: executionId, userId }).lean();
+  if (!execution) return null;
+  
+  const phases = await ExecutionPhase.find({ workflowExecutionId: executionId }).sort({ number: 1 }).lean() as any[];
+  return serializeForClient({ ...execution, phases });
 }
 
 export async function getWorkflowPhaseDetails(phaseId: string) {
@@ -144,21 +125,19 @@ export async function getWorkflowPhaseDetails(phaseId: string) {
     throw new Error("Unauthenticated");
   }
 
-  return prisma.executionPhase.findUnique({
-    where: {
-      id: phaseId,
-      execution: {
-        userId,
-      },
-    },
-    include: {
-      logs: {
-        orderBy: {
-          timestamp: "asc",
-        },
-      },
-    },
-  });
+  if (!phaseId || phaseId.trim() === "") {
+    return null;
+  }
+
+  await initDB();
+  const phase = await ExecutionPhase.findOne({ _id: phaseId }).lean() as any;
+  if (!phase) return null;
+  
+  const execution = await WorkflowExecution.findOne({ _id: phase.workflowExecutionId, userId }).lean();
+  if (!execution) return null;
+  
+  const logs = await ExecutionLog.find({ executionPhaseId: phaseId }).sort({ timestamp: 1 }).lean();
+  return serializeForClient({ ...phase, logs });
 }
 
 export async function getWorkflowExecutions(workflowId: string) {
@@ -168,15 +147,8 @@ export async function getWorkflowExecutions(workflowId: string) {
     throw new Error("Unauthenticated");
   }
 
-  return await prisma.workflowExecution.findMany({
-    where: {
-      workflowId,
-      userId,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
+  await initDB();
+  return await WorkflowExecution.find({ workflowId, userId }).sort({ createdAt: 1 }).lean();
 }
 
 export async function publishWorkflow({
@@ -192,12 +164,8 @@ export async function publishWorkflow({
     throw new Error("Unauthenticated");
   }
 
-  const workflow = await prisma.workflow.findUnique({
-    where: {
-      id,
-      userId,
-    },
-  });
+  await initDB();
+  const workflow = await Workflow.findOne({ _id: id, userId });
   if (!workflow) {
     throw new Error("Workflow not found");
   }
@@ -220,18 +188,16 @@ export async function publishWorkflow({
 
   const creditsCost = calculateWorkflowCost(flow.nodes);
 
-  await prisma.workflow.update({
-    where: {
-      id,
-      userId,
-    },
-    data: {
+  await Workflow.findOneAndUpdate(
+    { _id: id, userId },
+    {
       definition: flowDefinition,
       executionPlan: JSON.stringify(result.executionPlan),
       creditsCost,
       status: WorkflowStatus.PUBLISHED,
-    },
-  });
+      updatedAt: new Date()
+    }
+  );
   revalidatePath(`/worflow/editor/${id}`);
 }
 
@@ -241,12 +207,8 @@ export async function unPublishWorkflow(id: string) {
   if (!userId) {
     throw new Error("Unauthenticated");
   }
-  const workflow = await prisma.workflow.findUnique({
-    where: {
-      id,
-      userId,
-    },
-  });
+  await initDB();
+  const workflow = await Workflow.findOne({ _id: id, userId });
   if (!workflow) {
     throw new Error("Workflow not found");
   }
@@ -255,17 +217,15 @@ export async function unPublishWorkflow(id: string) {
     throw new Error("Workflow is not published");
   }
 
-  await prisma.workflow.update({
-    where: {
-      id,
-      userId,
-    },
-    data: {
+  await Workflow.findOneAndUpdate(
+    { _id: id, userId },
+    {
       status: WorkflowStatus.DRAFT,
       executionPlan: null,
       creditsCost: 0,
-    },
-  });
+      updatedAt: new Date()
+    }
+  );
   revalidatePath(`/worflow/editor/${id}`);
 }
 
@@ -283,17 +243,16 @@ export async function updateWorkFlowCron({
   }
 
   try {
+    await initDB();
     const interval = parser.parseExpression(cron, { utc: true });
-    await prisma.workflow.update({
-      where: {
-        id,
-        userId,
-      },
-      data: {
+    await Workflow.findOneAndUpdate(
+      { _id: id, userId },
+      {
         cron,
         nextRunAt: interval.next().toDate(),
-      },
-    });
+        updatedAt: new Date()
+      }
+    );
   } catch (error: any) {
     console.error(error.message);
     throw new Error("Invalid cron expression");
@@ -307,16 +266,15 @@ export async function removeWorkflowSchedule(id: string) {
   if (!userId) {
     throw new Error("Unauthenticated");
   }
-  await prisma.workflow.update({
-    where: {
-      id,
-      userId,
-    },
-    data: {
+  await initDB();
+  await Workflow.findOneAndUpdate(
+    { _id: id, userId },
+    {
       cron: null,
       nextRunAt: null,
-    },
-  });
+      updatedAt: new Date()
+    }
+  );
   revalidatePath("/workflows");
 }
 
@@ -332,25 +290,19 @@ export async function duplicateWorkflow(form: duplicateWorkflowSchemaType) {
     throw new Error("Unauthenticated");
   }
 
-  const sourceWorkflow = await prisma.workflow.findUnique({
-    where: {
-      userId,
-      id: form.workflowId,
-    },
-  });
+  await initDB();
+  const sourceWorkflow = await Workflow.findOne({ _id: form.workflowId, userId });
 
   if (!sourceWorkflow) {
     throw new Error("Workflow not found");
   }
 
-  const result = await prisma.workflow.create({
-    data: {
-      userId,
-      status: WorkflowStatus.DRAFT,
-      name: data.name,
-      description: data.description,
-      definition: sourceWorkflow.definition,
-    },
+  const result = await Workflow.create({
+    userId,
+    status: WorkflowStatus.DRAFT,
+    name: data.name,
+    description: data.description,
+    definition: sourceWorkflow.definition,
   });
   if (!result) {
     throw new Error("Failed to duplicate workflow");

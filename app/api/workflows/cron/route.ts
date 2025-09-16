@@ -1,25 +1,20 @@
 import { getAppUrl } from "@/lib/helper";
-import prisma from "@/lib/prisma";
+import initDB, { Workflow } from "@/lib/prisma";
 import { WorkflowStatus } from "@/lib/types";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   const now = new Date();
 
-  const workflows = await prisma.workflow.findMany({
-    select: {
-      id: true,
-    },
-    where: {
-      status: WorkflowStatus.PUBLISHED,
-      cron: { not: null },
-      nextRunAt: {
-        lte: now,
-      },
-    },
-  });
+  await initDB();
+  const workflows = await Workflow.find({
+    status: WorkflowStatus.PUBLISHED,
+    cron: { $ne: null },
+    nextRunAt: { $lte: now },
+  }).select('_id');
+
   for (const workflow of workflows) {
-    triggerWorkflow(workflow.id);
+    triggerWorkflow(workflow._id.toString());
   }
   return Response.json({ workflowsToRun: workflows.length }, { status: 200 });
 }

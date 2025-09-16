@@ -1,6 +1,6 @@
 "use client";
 
-import { Workflow } from "@prisma/client";
+// Workflow type is now inferred from Mongoose model
 import React from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import FlowEditor from "./FlowEditor";
@@ -9,7 +9,7 @@ import TaskMenu from "./TaskMenu";
 import { FlowValidationContextProvider } from "@/components/context/FlowValidationContext";
 import { WorkflowStatus } from "@/lib/types";
 
-function Editor({ workflow }: { workflow: Workflow }) {
+function Editor({ workflow }: { workflow: any }) {
   return (
     <FlowValidationContextProvider>
       <ReactFlowProvider>
@@ -17,7 +17,7 @@ function Editor({ workflow }: { workflow: Workflow }) {
           <Topbar
             title="Workflow editor"
             subtitle={workflow.name}
-            workflowId={workflow.id}
+            workflowId={workflow._id.toString()}
             isPublished={workflow.status === WorkflowStatus.PUBLISHED}
           />
           <section className="flex h-full overflow-auto">
