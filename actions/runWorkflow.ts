@@ -1,6 +1,6 @@
 "use server";
 
-import prisma from "@/lib/prisma";
+import initDB, { Workflow, WorkflowExecution, ExecutionPhase } from "@/lib/prisma";
 import {
   ExecutionPhaseStatus,
   WorkflowExecutionPlan,
@@ -29,12 +29,8 @@ export async function runWorkflow(form: {
     throw new Error("workflowId is required");
   }
 
-  const workflow = await prisma.workflow.findUnique({
-    where: {
-      userId,
-      id: workflowId,
-    },
-  });
+  await initDB();
+  const workflow = await Workflow.findOne({ _id: workflowId, userId });
 
   if (!workflow) {
     throw new Error("Workflow not found");
@@ -67,40 +63,35 @@ export async function runWorkflow(form: {
     executionPlan = result.executionPlan;
   }
 
-  const execution = await prisma.workflowExecution.create({
-    data: {
-      workflowId,
-      userId,
-      status: WorkflowExecutionStatus.PENDING,
-      startedAt: new Date(),
-      trigger: WorkflowExecutionTrigger.MANUAl,
-      definition: workflowDefinition,
-      phases: {
-        create: executionPlan.flatMap((phase) =>
-          phase.nodes.flatMap((node) => {
-            return {
-              userId,
-              status: ExecutionPhaseStatus.CREATED,
-              number: phase.phase,
-              node: JSON.stringify(node),
-              name: TaskRegistry[node.data.type].label,
-            };
-          })
-        ),
-      },
-    },
-    select: {
-      id: true,
-      phases: true,
-    },
+  const execution = await WorkflowExecution.create({
+    workflowId,
+    userId,
+    status: WorkflowExecutionStatus.PENDING,
+    startedAt: new Date(),
+    trigger: WorkflowExecutionTrigger.MANUAl,
+    definition: workflowDefinition,
   });
 
   if (!execution) {
     throw new Error("Workflow execution not created");
   }
 
-  // This will be a long running function, so just calling it and making it run in background
-  executeWorkflow(execution.id);
+  // Create execution phases
+  const phases = executionPlan.flatMap((phase) =>
+    phase.nodes.flatMap((node) => ({
+      userId,
+      status: ExecutionPhaseStatus.CREATED,
+      number: phase.phase,
+      node: JSON.stringify(node),
+      name: TaskRegistry[node.data.type].label,
+      workflowExecutionId: execution._id,
+    }))
+  );
 
-  redirect(`/workflow/runs/${workflowId}/${execution.id}`);
+  await ExecutionPhase.insertMany(phases);
+
+  // This will be a long running function, so just calling it and making it run in background
+  executeWorkflow(execution._id.toString());
+
+  redirect(`/workflow/runs/${workflowId}/${execution._id}`);
 }

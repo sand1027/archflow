@@ -1,5 +1,5 @@
 "use client";
-import { Workflow } from "@prisma/client";
+// Workflow type is now inferred from Mongoose model
 import {
   addEdge,
   Background,
@@ -32,7 +32,7 @@ const snapgird: [number, number] = [50, 50];
 
 const fitViewOptions = { padding: 1 };
 
-function FlowEditor({ workflow }: { workflow: Workflow }) {
+function FlowEditor({ workflow }: { workflow: any }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const { setViewport, screenToFlowPosition, updateNodeData } = useReactFlow();

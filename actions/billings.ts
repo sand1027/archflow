@@ -2,7 +2,7 @@
 
 import { getCreditsPack, PackId } from "@/lib/billing";
 import { getAppUrl } from "@/lib/helper";
-import prisma from "@/lib/prisma";
+import initDB, { UserBalance, UserPurchase } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe/stripe";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -14,16 +14,20 @@ export async function getAvailableCredits() {
     throw new Error("Unauthenticated");
   }
 
-  const balance = await prisma.userBalance.findUnique({
-    where: {
-      userId,
-    },
-  });
+  await initDB();
+  let balance = await UserBalance.findOne({ userId });
 
-  if (!balance) return -1;
+  if (!balance) {
+    // Auto-create balance with 50000 credits
+    balance = await UserBalance.create({
+      userId,
+      credits: 50000,
+    });
+  }
 
   return balance.credits;
 }
+
 export async function setupUser() {
   const { userId } = await auth();
 
@@ -31,19 +35,20 @@ export async function setupUser() {
     throw new Error("Unauthenticated");
   }
 
-  const userBalance = await prisma.userBalance.findUnique({
-    where: {
-      userId,
-    },
-  });
+  await initDB();
+  const userBalance = await UserBalance.findOne({ userId });
 
   if (!userBalance) {
-    await prisma.userBalance.create({
-      data: {
-        userId,
-        credits: 200,
-      },
+    await UserBalance.create({
+      userId,
+      credits: 10000,
     });
+  } else {
+    // Add more credits if balance exists
+    await UserBalance.findOneAndUpdate(
+      { userId },
+      { $inc: { credits: 10000 } }
+    );
   }
 
   redirect("/home");
@@ -99,14 +104,8 @@ export async function getUserPurchases() {
     throw new Error("Unauthenticated");
   }
 
-  return await prisma.userPurchase.findMany({
-    where: {
-      userId,
-    },
-    orderBy: {
-      date: "desc",
-    },
-  });
+  await initDB();
+  return await UserPurchase.find({ userId }).sort({ date: -1 }).lean();
 }
 
 export async function downloadInvoice(id: string) {
@@ -116,12 +115,8 @@ export async function downloadInvoice(id: string) {
     throw new Error("Unauthenticated");
   }
 
-  const purchase = await prisma.userPurchase.findUnique({
-    where: {
-      userId,
-      id,
-    },
-  });
+  await initDB();
+  const purchase = await UserPurchase.findOne({ _id: id, userId });
 
   if (!purchase) {
     throw new Error("Bad request");

@@ -1,4 +1,4 @@
-import { ExecutionPhase } from "@prisma/client";
+// ExecutionPhase type is now inferred from Mongoose model
 import { endOfMonth, intervalToDuration, startOfMonth } from "date-fns";
 import { AppNode, Period } from "./types";
 import { TaskRegistry } from "./workflow/task/Registry";

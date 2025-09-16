@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import initDB, { Workflow, WorkflowExecution, ExecutionPhase } from "@/lib/prisma";
 import {
   ExecutionPhaseStatus,
   WorkflowExecutionPlan,
@@ -26,11 +26,8 @@ export async function GET(request: Request) {
     return Response.json({ error: "Bad Request" }, { status: 400 });
   }
 
-  const workflow = await prisma.workflow.findUnique({
-    where: {
-      id: workflowId,
-    },
-  });
+  await initDB();
+  const workflow = await Workflow.findById(workflowId);
   if (!workflow) {
     return Response.json({ error: "Bad Request" }, { status: 400 });
   }
@@ -47,31 +44,30 @@ export async function GET(request: Request) {
     const cron = parser.parseExpression(workflow.cron!, { utc: true });
     const nextRun = cron.next().toDate();
 
-    const execution = await prisma.workflowExecution.create({
-      data: {
-        workflowId,
-        userId: workflow.userId,
-        definition: workflow.definition,
-        status: WorkflowExecutionStatus.PENDING,
-        startedAt: new Date(),
-        trigger: WorkflowExecutionTrigger.CRON,
-        phases: {
-          create: executionPlan.flatMap((phase) =>
-            phase.nodes.flatMap((node) => {
-              return {
-                userId: workflow.userId,
-                status: ExecutionPhaseStatus.CREATED,
-                number: phase.phase,
-                node: JSON.stringify(node),
-                name: TaskRegistry[node.data.type].label,
-              };
-            })
-          ),
-        },
-      },
+    const execution = await WorkflowExecution.create({
+      workflowId,
+      userId: workflow.userId,
+      definition: workflow.definition,
+      status: WorkflowExecutionStatus.PENDING,
+      startedAt: new Date(),
+      trigger: WorkflowExecutionTrigger.CRON,
     });
 
-    await executeWorkflow(execution.id, nextRun);
+    // Create execution phases
+    const phases = executionPlan.flatMap((phase) =>
+      phase.nodes.flatMap((node) => ({
+        userId: workflow.userId,
+        status: ExecutionPhaseStatus.CREATED,
+        number: phase.phase,
+        node: JSON.stringify(node),
+        name: TaskRegistry[node.data.type].label,
+        workflowExecutionId: execution._id,
+      }))
+    );
+
+    await ExecutionPhase.insertMany(phases);
+
+    await executeWorkflow(execution._id.toString(), nextRun);
     return new Response(null, { status: 200 });
   } catch (error: any) {
     return Response.json({ error: "Internal server error" }, { status: 500 });

@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import "server-only";
-import prisma from "../prisma";
+import initDB, { WorkflowExecution, Workflow, ExecutionPhase, ExecutionLog, UserBalance } from "../prisma";
 import {
   AppNode,
   Enviornment,
@@ -10,7 +10,6 @@ import {
   TaskParamType,
   WorkflowExecutionStatus,
 } from "../types";
-import { ExecutionPhase } from "@prisma/client";
 import { TaskRegistry } from "./task/Registry";
 import { ExecutorRegistry } from "./executor/Registry";
 import { Browser, Page } from "puppeteer";
@@ -18,31 +17,32 @@ import { Edge } from "@xyflow/react";
 import { createLogCollector } from "../log";
 
 export async function executeWorkflow(executionId: string, nextRunAt?: Date) {
-  const execution = await prisma.workflowExecution.findUnique({
-    where: {
-      id: executionId,
-    },
-    include: { workflow: true, phases: true },
-  });
-
+  await initDB();
+  const execution = await WorkflowExecution.findById(executionId);
   if (!execution) {
     throw new Error("Execution not found");
   }
 
+  const workflow = await Workflow.findById(execution.workflowId);
+  if (!workflow) {
+    throw new Error("Workflow not found");
+  }
+
+  const phases = await ExecutionPhase.find({ workflowExecutionId: executionId }).sort({ number: 1 });
   const edges = JSON.parse(execution.definition).edges as Edge[];
 
   const enviornment = { phases: {} };
   await initializeWorkflowExecution(
     executionId,
-    execution.workflowId,
+    execution.workflowId.toString(),
     nextRunAt
   );
-  await initializePhaseStatues(execution);
+  await initializePhaseStatues(phases);
 
   let executionFailed = false;
   let creditsConsumed = 0;
 
-  for (const phase of execution.phases) {
+  for (const phase of phases) {
     const phaseExecution = await executeWorkflowPhase(
       phase,
       enviornment,
@@ -58,7 +58,7 @@ export async function executeWorkflow(executionId: string, nextRunAt?: Date) {
 
   await finalizeWorkflowExecution(
     executionId,
-    execution.workflowId,
+    execution.workflowId.toString(),
     executionFailed,
     creditsConsumed
   );
@@ -72,39 +72,31 @@ async function initializeWorkflowExecution(
   workflowId: string,
   nextRunAt?: Date
 ) {
-  await prisma.workflowExecution.update({
-    where: {
-      id: executionId,
-    },
-    data: {
-      startedAt: new Date(),
-      status: WorkflowExecutionStatus.RUNNING,
-    },
+  await WorkflowExecution.findByIdAndUpdate(executionId, {
+    startedAt: new Date(),
+    status: WorkflowExecutionStatus.RUNNING,
   });
-  await prisma.workflow.update({
-    where: {
-      id: workflowId,
-    },
-    data: {
-      lastRunAt: new Date(),
-      lastRunStatus: WorkflowExecutionStatus.RUNNING,
-      lastRunId: executionId,
-      ...(nextRunAt && { nextRunAt }),
-    },
-  });
+
+  const updateData: any = {
+    lastRunAt: new Date(),
+    lastRunStatus: WorkflowExecutionStatus.RUNNING,
+    lastRunId: executionId,
+    updatedAt: new Date(),
+  };
+  
+  if (nextRunAt) {
+    updateData.nextRunAt = nextRunAt;
+  }
+
+  await Workflow.findByIdAndUpdate(workflowId, updateData);
 }
 
-async function initializePhaseStatues(execution: any) {
-  await prisma.executionPhase.updateMany({
-    where: {
-      id: {
-        in: execution.phases.map((phase: any) => phase.id),
-      },
-    },
-    data: {
-      status: ExecutionPhaseStatus.PENDING,
-    },
-  });
+async function initializePhaseStatues(phases: any[]) {
+  const phaseIds = phases.map(phase => phase._id);
+  await ExecutionPhase.updateMany(
+    { _id: { $in: phaseIds } },
+    { status: ExecutionPhaseStatus.PENDING }
+  );
 }
 
 async function finalizeWorkflowExecution(
@@ -117,35 +109,26 @@ async function finalizeWorkflowExecution(
     ? WorkflowExecutionStatus.FAILED
     : WorkflowExecutionStatus.COMPLETED;
 
-  await prisma.workflowExecution.update({
-    where: {
-      id: executionId,
-    },
-    data: {
-      status: finalStatus,
-      completedAt: new Date(),
-      creditsConsumed,
-    },
+  await WorkflowExecution.findByIdAndUpdate(executionId, {
+    status: finalStatus,
+    completedAt: new Date(),
+    creditsConsumed,
   });
 
-  await prisma.workflow
-    .update({
-      where: {
-        id: workflowId,
-        lastRunId: executionId,
-      },
-      data: {
-        lastRunStatus: finalStatus,
-      },
-    })
-    .catch((err) => {
-      // Ignoring the error
-      // This means that we have triggred other runs for this workflow, while an execution was running
-    });
+  await Workflow.findOneAndUpdate(
+    { _id: workflowId, lastRunId: executionId },
+    { 
+      lastRunStatus: finalStatus,
+      updatedAt: new Date()
+    }
+  ).catch((err) => {
+    // Ignoring the error
+    // This means that we have triggred other runs for this workflow, while an execution was running
+  });
 }
 
 async function executeWorkflowPhase(
-  phase: ExecutionPhase,
+  phase: any,
   enviornment: Enviornment,
   edges: Edge[],
   userId: string
@@ -155,17 +138,11 @@ async function executeWorkflowPhase(
 
   const node = JSON.parse(phase.node) as AppNode;
   setupEnviornmentForPhase(node, enviornment, edges);
-  // Update the status
 
-  await prisma.executionPhase.update({
-    where: {
-      id: phase.id,
-    },
-    data: {
-      status: ExecutionPhaseStatus.RUNNING,
-      startedAt,
-      inputs: JSON.stringify(enviornment.phases[node.id].inputs),
-    },
+  await ExecutionPhase.findByIdAndUpdate(phase._id, {
+    status: ExecutionPhaseStatus.RUNNING,
+    startedAt,
+    inputs: JSON.stringify(enviornment.phases[node.id].inputs),
   });
 
   const creditsRequired = TaskRegistry[node.data.type].credits;
@@ -179,7 +156,7 @@ async function executeWorkflowPhase(
   }
   const outputs = enviornment.phases[node.id].outputs;
   await finalizePhase(
-    phase.id,
+    phase._id.toString(),
     success,
     outputs,
     creditsConsumed,
@@ -199,30 +176,28 @@ async function finalizePhase(
     ? ExecutionPhaseStatus.COMPLETED
     : ExecutionPhaseStatus.FAILED;
 
-  await prisma.executionPhase.update({
-    where: {
-      id: phaseId,
-    },
-    data: {
-      status: finalStatus,
-      completedAt: new Date(),
-      outputs: JSON.stringify(outputs),
-      creditsConsumed,
-      logs: {
-        createMany: {
-          data: logCollector.getAll().map((log) => ({
-            message: log.message,
-            timestamp: log.timeStamp,
-            logLevel: log.level,
-          })),
-        },
-      },
-    },
+  await ExecutionPhase.findByIdAndUpdate(phaseId, {
+    status: finalStatus,
+    completedAt: new Date(),
+    outputs: JSON.stringify(outputs),
+    creditsConsumed,
   });
+
+  // Create logs
+  const logs = logCollector.getAll().map((log) => ({
+    message: log.message,
+    timestamp: log.timeStamp,
+    logLevel: log.level,
+    executionPhaseId: phaseId,
+  }));
+
+  if (logs.length > 0) {
+    await ExecutionLog.insertMany(logs);
+  }
 }
 
 async function executePhase(
-  phase: ExecutionPhase,
+  phase: any,
   node: AppNode,
   enviornment: Enviornment,
   logCollector: LogCollector
@@ -316,21 +291,19 @@ async function decrementCredits(
   logCollector: LogCollector
 ) {
   try {
-    await prisma.userBalance.update({
-      where: {
-        userId,
-        credits: {
-          gte: amount,
-        },
-      },
-      data: {
-        credits: { decrement: amount },
-      },
-    });
+    const result = await UserBalance.findOneAndUpdate(
+      { userId, credits: { $gte: amount } },
+      { $inc: { credits: -amount } },
+      { new: true }
+    );
+    
+    if (!result) {
+      logCollector.error("Insufficient balance");
+      return false;
+    }
     return true;
   } catch (error) {
     logCollector.error("Insufficient balance");
-    // user does not have sufficient balance
     return false;
   }
 }

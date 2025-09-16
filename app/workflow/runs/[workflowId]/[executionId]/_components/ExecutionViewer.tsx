@@ -42,7 +42,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { ExecutionLog } from "@prisma/client";
+// ExecutionLog type is now inferred from Mongoose model
 import React, { useEffect, useState } from "react";
 import PhaseStatusBadge from "./PhaseStatusBadge";
 import ReactCountUpWrapper from "@/components/ReactCountUpWrapper";
@@ -53,8 +53,8 @@ function ExecutionViewer({ initialData }: { initialData: ExecutionData }) {
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
 
   const query = useQuery({
-    queryKey: ["execution", initialData?.id],
-    queryFn: () => getWorkflowExecutionWithPhases(initialData!.id),
+    queryKey: ["execution", initialData?._id],
+    queryFn: () => getWorkflowExecutionWithPhases(typeof initialData!._id === 'string' ? initialData!._id : initialData!._id.toString()),
     refetchInterval: (q) =>
       q.state.data?.status === WorkflowExecutionStatus.RUNNING ? 1000 : false,
   });
@@ -75,14 +75,14 @@ function ExecutionViewer({ initialData }: { initialData: ExecutionData }) {
         a.startedAt! > b.startedAt! ? -1 : 1
       )[0];
 
-      setSelectedPhase(phaseToSelect.id);
+      setSelectedPhase(phaseToSelect._id?.toString() || null);
       return;
     }
     // Auto selecting last run phase on reload
     const phaseToSelect = phases.toSorted((a, b) =>
       a.completedAt! > b.completedAt! ? -1 : 1
     )[0];
-    setSelectedPhase(phaseToSelect?.id || "");
+    setSelectedPhase(phaseToSelect?._id?.toString() || null);
   }, [query.data?.phases, isRunning]);
 
   const duration = datesToDurationString(
@@ -149,12 +149,12 @@ function ExecutionViewer({ initialData }: { initialData: ExecutionData }) {
         <div className="overflow-auto h-full px-2 py-4">
           {query.data?.phases.map((phase, index) => (
             <Button
-              key={phase.id}
+              key={phase._id}
               className="w-full justify-between"
-              variant={selectedPhase === phase.id ? "secondary" : "ghost"}
+              variant={selectedPhase === phase._id?.toString() ? "secondary" : "ghost"}
               onClick={() => {
                 if (isRunning) return;
-                setSelectedPhase(phase.id);
+                setSelectedPhase(phase._id?.toString() || null);
               }}
             >
               <div className="flex items-center gap-2">
@@ -318,7 +318,7 @@ function LogViewer({ logs }: { logs: ExecutionLog[] | undefined }) {
           </TableHeader>
           <TableBody>
             {logs.map((log) => (
-              <TableRow key={log.id} className="text-muted-foreground">
+              <TableRow key={log._id} className="text-muted-foreground">
                 <TableCell
                   width={190}
                   className="text-xs text-muted-foreground p-[2px] pl-4"

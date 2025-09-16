@@ -1,7 +1,7 @@
 "use server";
 
 import { symmetricEncrypt } from "@/lib/credential";
-import prisma from "@/lib/prisma";
+import initDB, { Credential } from "@/lib/prisma";
 import {
   createCredentialSchema,
   createCredentialSchemaType,
@@ -16,14 +16,8 @@ export async function getUserCredentials() {
     throw new Error("Unauthenticated");
   }
 
-  return await prisma.credential.findMany({
-    where: {
-      userId,
-    },
-    orderBy: {
-      name: "asc",
-    },
-  });
+  await initDB();
+  return await Credential.find({ userId }).sort({ name: 1 }).lean();
 }
 
 export async function createCredential(form: createCredentialSchemaType) {
@@ -41,12 +35,11 @@ export async function createCredential(form: createCredentialSchemaType) {
 
   const encryptedValue = symmetricEncrypt(data.value);
 
-  const result = await prisma.credential.create({
-    data: {
-      userId,
-      name: data.name,
-      value: encryptedValue,
-    },
+  await initDB();
+  const result = await Credential.create({
+    userId,
+    name: data.name,
+    value: encryptedValue,
   });
 
   if (!result) {
@@ -62,12 +55,8 @@ export async function deleteCredential(id: string) {
     throw new Error("Unauthenticated");
   }
 
-  await prisma.credential.delete({
-    where: {
-      userId,
-      id,
-    },
-  });
+  await initDB();
+  await Credential.findOneAndDelete({ _id: id, userId });
 
   revalidatePath("/credentials");
 }
