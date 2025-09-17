@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "./ui/button";
 import { MenuIcon } from "lucide-react";
 import Logo from "./Logo";
 import Link from "next/link";
-import UserAvailableCreditsBadge from "./UserAvailableCreditsBadge";
+
 
 function MobileSidebar() {
   const pathname = usePathname();
@@ -32,7 +32,7 @@ function MobileSidebar() {
             side="left"
           >
             <Logo />
-            <UserAvailableCreditsBadge />
+
             <div className="flex flex-col gap-1">
               {routes.map((route) => (
                 <Link

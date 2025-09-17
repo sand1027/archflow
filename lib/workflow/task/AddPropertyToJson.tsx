@@ -32,5 +32,4 @@ export const AddPropertyToJsonTask = {
       type: TaskParamType.STRING,
     },
   ] as const,
-  credits: 1,
 } satisfies WorkflowTask;

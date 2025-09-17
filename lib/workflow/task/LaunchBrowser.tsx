@@ -23,5 +23,4 @@ export const LaunchBrowserTask = {
       type: TaskParamType.BROWSE_INSTANCE,
     },
   ] as const,
-  credits: 5,
 } satisfies WorkflowTask;

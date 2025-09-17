@@ -31,5 +31,4 @@ export const FillInputTask = {
       type: TaskParamType.BROWSE_INSTANCE,
     },
   ] as const,
-  credits: 1,
 } satisfies WorkflowTask;

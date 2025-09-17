@@ -8,7 +8,6 @@ export const ExtractDataWithAiTask = {
     <BrainIcon className="stroke-rose-400" {...props} />
   ),
   isEntryPoint: false,
-  credits: 3,
   inputs: [
     {
       name: "Content",

@@ -25,5 +25,4 @@ export const PageToHtmlTask = {
       type: TaskParamType.BROWSE_INSTANCE,
     },
   ] as const,
-  credits: 2,
 } satisfies WorkflowTask;

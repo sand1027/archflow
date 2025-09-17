@@ -1,5 +1,4 @@
 import {
-  CoinsIcon,
   HomeIcon,
   Layers2Icon,
   ShieldCheckIcon,
@@ -22,11 +21,7 @@ export const routes = [
     label: "Credentials",
     icon: ShieldCheckIcon,
   },
-  {
-    href: "/billing",
-    label: "Billing",
-    icon: CoinsIcon,
-  },
+
   {
     href: "/github-scraper",
     label: "GitHub Scraper",
@@ -104,11 +99,7 @@ export const headerRoutes = [
     href: "#scrapingFeatures",
     className: "",
   },
-  {
-    title: "Pricing",
-    href: "#pricing",
-    className: "",
-  },
+
   {
     title: "Get Started",
     href: "/sign-in",
@@ -117,27 +108,4 @@ export const headerRoutes = [
   },
 ];
 
-export const pricingPlans = [
-  {
-    title: "Small Pack",
-    description: "Get 1,000 credits",
-    credits: 1000,
-    price: 9.99,
-    link: "/billing",
-  },
-  {
-    title: "Medium Pack",
-    description: "Get 5,000 credits",
-    credits: 5000,
-    price: 39.99,
-    highlighted: true,
-    link: "/billing",
-  },
-  {
-    title: "Large Pack",
-    description: "Get 10,000 credits",
-    credits: 10000,
-    price: 69.99,
-    link: "/billing",
-  },
-];
+

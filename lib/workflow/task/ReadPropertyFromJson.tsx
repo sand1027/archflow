@@ -27,5 +27,4 @@ export const ReadPropertyFromJsonTask = {
       type: TaskParamType.STRING,
     },
   ] as const,
-  credits: 1,
 } satisfies WorkflowTask;
