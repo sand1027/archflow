@@ -1,19 +1,9 @@
-"use client";
-
 import { ClerkProvider } from "@clerk/nextjs";
 import { ReactNode } from "react";
 
 export function ClerkWrapper({ children }: { children: ReactNode }) {
-  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-  
-  if (!publishableKey) {
-    // During build time or when key is missing, render children without Clerk
-    return <>{children}</>;
-  }
-
   return (
     <ClerkProvider
-      publishableKey={publishableKey}
       afterSignOutUrl="/sign-in"
       appearance={{
         elements: {
