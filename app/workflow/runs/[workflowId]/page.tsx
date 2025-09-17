@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import Topbar from "../../_components/topbar/Topbar";
 import ExecutionsTable from "./_components/ExecutionsTable";
 
+export const dynamic = 'force-dynamic';
+
 function ExecutionsPage({
   params,
 }: {

@@ -4,6 +4,8 @@ import { Loader2Icon } from "lucide-react";
 import { Suspense } from "react";
 import ExecutionViewer from "./_components/ExecutionViewer";
 
+export const dynamic = 'force-dynamic';
+
 function ExecutionViewerPage({
   params,
 }: {

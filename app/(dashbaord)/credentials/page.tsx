@@ -8,6 +8,8 @@ import CreateCredentialDialog from "./_components/CreateCredentialDialog";
 import { formatDistance, formatDistanceToNow } from "date-fns";
 import DeleteCredentialDialog from "./_components/DeleteCredentialDialog";
 
+export const dynamic = 'force-dynamic';
+
 function CredentialsPage() {
   return (
     <div className="flex flex-1 flex-col h-full">

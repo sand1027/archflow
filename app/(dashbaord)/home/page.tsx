@@ -11,6 +11,8 @@ import PeriodSelector from "./_components/PeriodSelector";
 import StatsCard from "./_components/StatsCard";
 import ExecutionStatusChart from "./_components/ExecutionStatusChart";
 
+export const dynamic = 'force-dynamic';
+
 
 function Homepage({
   searchParams,

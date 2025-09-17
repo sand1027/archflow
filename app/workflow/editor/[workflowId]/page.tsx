@@ -4,6 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import React from "react";
 import Editor from "../../_components/Editor";
 
+export const dynamic = 'force-dynamic';
+
 async function WorkflowEditorPage({
   params,
 }: {

@@ -3,6 +3,8 @@ import UserWorkflowSkeleton from "./_components/UserWorkflowSkeleton";
 import UserWorkflows from "./_components/UserWorkflows";
 import CreateWorkflowDialog from "./_components/CreateWorkflowDialog";
 
+export const dynamic = 'force-dynamic';
+
 function page() {
   return (
     <div className="flex flex-1 flex-col h-full">
