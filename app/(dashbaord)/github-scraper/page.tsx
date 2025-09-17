@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Star, Eye, GitFork, Calendar, FileText, Code, Folder, File } from "lucide-react";
+import Image from "next/image";
 import { FileTree } from "./_components/FileTree";
 
 interface GitHubData {
@@ -114,7 +115,7 @@ export default function GitHubScraperPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
-              <img src={data.owner.avatar_url} alt={data.owner.login} className="w-8 h-8 rounded-full" />
+              <Image src={data.owner.avatar_url} alt={data.owner.login} width={32} height={32} className="w-8 h-8 rounded-full" />
               <div>
                 <div className="flex items-center gap-2">
                   <span>{data.name}</span>
@@ -294,7 +295,7 @@ export default function GitHubScraperPage() {
                 <div className="flex flex-wrap gap-2">
                   {data.contributors.slice(0, 10).map((contributor: any) => (
                     <div key={contributor.login} className="flex items-center gap-2 bg-muted p-2 rounded">
-                      <img src={contributor.avatar_url} alt={contributor.login} className="w-6 h-6 rounded-full" />
+                      <Image src={contributor.avatar_url} alt={contributor.login} width={24} height={24} className="w-6 h-6 rounded-full" />
                       <span className="text-sm">{contributor.login}</span>
                       <Badge variant="outline" className="text-xs">{contributor.contributions}</Badge>
                     </div>

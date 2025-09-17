@@ -97,10 +97,7 @@ function TaskMenuButton({ taskType }: { taskType: TaskType }) {
         <task.icon size={20} />
         {task.label}
       </div>
-      <Badge className="gap-2 flex items-center" variant={"outline"}>
-        <CoinsIcon size={16} />
-        {task.credits}
-      </Badge>
+
     </Button>
   );
 }

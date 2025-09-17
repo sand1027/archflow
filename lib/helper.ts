@@ -29,14 +29,14 @@ export function datesToDurationString(
   }s`;
 }
 
-type Phase = Pick<ExecutionPhase, "creditsConsumed">;
+type Phase = { creditsConsumed?: number };
 export function getPhasesTotalCost(phases: Phase[]) {
   return phases.reduce((acc, phase) => acc + (phase.creditsConsumed || 0), 0);
 }
 
 export function calculateWorkflowCost(nodes: AppNode[]) {
   return nodes.reduce((acc, node) => {
-    return acc + TaskRegistry[node.data.type].credits;
+    return acc + 1; // Default cost per node
   }, 0);
 }
 

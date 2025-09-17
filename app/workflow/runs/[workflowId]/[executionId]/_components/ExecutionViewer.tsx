@@ -42,8 +42,14 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-// ExecutionLog type is now inferred from Mongoose model
 import React, { useEffect, useState } from "react";
+
+type ExecutionLog = {
+  _id: string;
+  timestamp: Date;
+  logLevel: string;
+  message: string;
+};
 import PhaseStatusBadge from "./PhaseStatusBadge";
 import ReactCountUpWrapper from "@/components/ReactCountUpWrapper";
 
@@ -71,7 +77,7 @@ function ExecutionViewer({ initialData }: { initialData: ExecutionData }) {
     // If status is running auto select the running phase
     const phases = query.data?.phases || [];
     if (isRunning) {
-      const phaseToSelect = phases.toSorted((a, b) =>
+      const phaseToSelect = phases.toSorted((a: any, b: any) =>
         a.startedAt! > b.startedAt! ? -1 : 1
       )[0];
 
@@ -79,7 +85,7 @@ function ExecutionViewer({ initialData }: { initialData: ExecutionData }) {
       return;
     }
     // Auto selecting last run phase on reload
-    const phaseToSelect = phases.toSorted((a, b) =>
+    const phaseToSelect = phases.toSorted((a: any, b: any) =>
       a.completedAt! > b.completedAt! ? -1 : 1
     )[0];
     setSelectedPhase(phaseToSelect?._id?.toString() || null);
@@ -147,7 +153,7 @@ function ExecutionViewer({ initialData }: { initialData: ExecutionData }) {
         </div>
         <Separator />
         <div className="overflow-auto h-full px-2 py-4">
-          {query.data?.phases.map((phase, index) => (
+          {query.data?.phases.map((phase: any, index : any) => (
             <Button
               key={phase._id}
               className="w-full justify-between"

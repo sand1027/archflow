@@ -3,6 +3,8 @@ import initDB, { Workflow } from "@/lib/prisma";
 import { WorkflowStatus } from "@/lib/types";
 import { NextRequest } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   const now = new Date();
 

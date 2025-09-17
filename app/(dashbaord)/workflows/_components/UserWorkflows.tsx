@@ -38,7 +38,7 @@ async function UserWorkflows() {
   }
   return (
     <div className="grid grid-cols-1 gap-4">
-      {workflows.map((workflow) => (
+      {workflows.map((workflow: any) => (
         <WorkflowCard workflow={workflow} key={workflow._id} />
       ))}
     </div>
