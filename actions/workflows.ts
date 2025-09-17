@@ -40,23 +40,35 @@ export async function createWorkflow(form: createWorkflowShemaType) {
     throw new Error("Unauthenticated");
   }
 
-  const initWorkflow: { nodes: AppNode[]; edges: Edge[] } = {
-    nodes: [],
-    edges: [],
-  };
-  initWorkflow.nodes.push(createFlowNode(TaskType.LAUNCH_BROWSER));
-  await initDB();
-  const result = await Workflow.create({
-    userId,
-    status: WorkflowStatus.DRAFT,
-    definition: JSON.stringify(initWorkflow),
-    ...data,
-  });
-  if (!result) {
-    throw new Error("Failed to create workflow");
-  }
+  try {
+    const initWorkflow: { nodes: AppNode[]; edges: Edge[] } = {
+      nodes: [],
+      edges: [],
+    };
+    initWorkflow.nodes.push(createFlowNode(TaskType.LAUNCH_BROWSER));
+    await initDB();
+    const result = await Workflow.create({
+      userId,
+      status: WorkflowStatus.DRAFT,
+      definition: JSON.stringify(initWorkflow),
+      ...data,
+    });
+    if (!result) {
+      throw new Error("Failed to create workflow");
+    }
 
-  redirect(`/workflow/editor/${result._id}`);
+    redirect(`/workflow/editor/${result._id}`);
+  } catch (error: any) {
+    // Don't catch Next.js redirect errors
+    if (error.message === 'NEXT_REDIRECT') {
+      throw error;
+    }
+    console.error('Error creating workflow:', error);
+    if (error.code === 11000) {
+      throw new Error("A workflow with this name already exists");
+    }
+    throw new Error("Failed to create workflow: " + error.message);
+  }
 }
 
 export async function deleteWorkflow(workflowId: string) {

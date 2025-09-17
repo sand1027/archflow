@@ -18,7 +18,8 @@ const workflowSchema = new mongoose.Schema({
   nextRunAt: { type: Date }
 });
 
-workflowSchema.index({ name: 1, userId: 1 }, { unique: true });
+// Removed unique constraint to allow duplicate workflow names
+// workflowSchema.index({ name: 1, userId: 1 }, { unique: true });
 workflowSchema.pre('save', function() {
   this.updatedAt = new Date();
 });
