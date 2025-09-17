@@ -124,6 +124,41 @@ export type LogCollector = {
   [key in LogLevel]: LogFunction;
 };
 
+export interface GitHubRepository {
+  name: string;
+  description: string;
+  stars: number;
+  forks: number;
+  watchers: number;
+  language: string;
+  created_at: string;
+  updated_at: string;
+  size: number;
+  default_branch: string;
+  open_issues: number;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+  topics: string[];
+  license?: { name: string };
+}
+
+export interface GitHubAnalysis {
+  readme: string;
+  languages: Record<string, number>;
+  fileStructure: any[];
+  fullFileStructure: any[];
+  packageJson: any;
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
+  scripts: Record<string, string>;
+  projectAnalysis: string;
+  architectureAnalysis: string;
+}
+
+export interface GitHubScrapedData extends GitHubRepository, GitHubAnalysis {}
+
 export type ExecutionEnviornment<T extends WorkflowTask> = {
   getInput(name: T["inputs"][number]["name"]): string;
   setOutput(name: T["outputs"][number]["name"], value: string): void;

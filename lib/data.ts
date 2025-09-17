@@ -3,6 +3,7 @@ import {
   HomeIcon,
   Layers2Icon,
   ShieldCheckIcon,
+  GitBranchIcon,
 } from "lucide-react";
 
 export const routes = [
@@ -25,6 +26,11 @@ export const routes = [
     href: "/billing",
     label: "Billing",
     icon: CoinsIcon,
+  },
+  {
+    href: "/github-scraper",
+    label: "GitHub Scraper",
+    icon: GitBranchIcon,
   },
 ];
 

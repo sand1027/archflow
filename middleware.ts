@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/api/workflows(.*)",
   "/api/webhooks/stripe",
+  "/api/github-scraper",
   "/",
 ]);
 
