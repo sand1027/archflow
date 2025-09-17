@@ -1,4 +1,6 @@
 import initDB, { Workflow, WorkflowExecution, ExecutionPhase } from "@/lib/prisma";
+
+export const dynamic = 'force-dynamic';
 import {
   ExecutionPhaseStatus,
   WorkflowExecutionPlan,
