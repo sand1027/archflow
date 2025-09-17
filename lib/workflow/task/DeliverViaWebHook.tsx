@@ -21,5 +21,4 @@ export const DeliverViaWebHookTask = {
     },
   ] as const,
   outputs: [] as const,
-  credits: 1,
 } satisfies WorkflowTask;

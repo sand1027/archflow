@@ -1,19 +1,20 @@
 "use client";
 import { TypewriterEffectSmooth } from "@/components/accernity-ui/TypeWriterEffect";
 import { Button } from "@/components/ui/button";
-import { pricingPlans, typeWriterWords } from "@/lib/data";
+import { typeWriterWords } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { ChevronRightIcon } from "lucide-react";
 import { FeaturesSection } from "./_components/Feature";
 import { FeaturesGradient } from "./_components/FeaturesGradient";
 
-import { HoverEffect } from "@/components/accernity-ui/CardHover";
+
 import Link from "next/link";
 import Navbar from "./_components/Navbar";
 
+
 export default function HomeLandingPage() {
   return (
-    <div className="flex flex-col min-h-screen gap-4 selection:bg-primary selection:text-white dark bg-[#0C0A09] ">
+    <div className="flex flex-col min-h-screen gap-4 selection:bg-primary selection:text-white dark bg-[#0C0A09]">
       <Navbar />
       <SectionWrapper className="h-[35rem] text-center">
         <TypewriterEffectSmooth
@@ -35,9 +36,7 @@ export default function HomeLandingPage() {
             <ChevronRightIcon className="h-4 w-4" />
           </Button>
         </div>
-        <p className="text-sm text-primary">
-          New users get 200 credits for free upon first login
-        </p>
+
       </SectionWrapper>
       <SectionWrapper
         id="howItWorks"
@@ -53,16 +52,7 @@ export default function HomeLandingPage() {
       >
         <FeaturesSection />
       </SectionWrapper>
-      <SectionWrapper
-        id="pricing"
-        className="w-full py-12 md:py-24 lg:py-32"
-        primaryTitle="Simple"
-        secondaryTitle="Pricing"
-      >
-        <div className="flex gap-5 w-full mt-10">
-          <HoverEffect items={[...pricingPlans]} />
-        </div>
-      </SectionWrapper>
+
 
       <SectionWrapper className="text-center">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-[#22C55E] to-green-600">
@@ -80,7 +70,7 @@ export default function HomeLandingPage() {
           <ChevronRightIcon className="ml-2 h-4 w-4" />
         </Link>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          No credit card required. Start with 200 free credits.
+          No credit card required. Start building workflows today.
         </p>
       </SectionWrapper>
     </div>

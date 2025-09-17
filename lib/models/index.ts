@@ -7,7 +7,7 @@ const workflowSchema = new mongoose.Schema({
   description: { type: String },
   definition: { type: String, required: true },
   executionPlan: { type: String },
-  creditsCost: { type: Number, default: 0 },
+
   status: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   lastRunAt: { type: Date },
@@ -32,7 +32,7 @@ const workflowExecutionSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   startedAt: { type: Date },
   completedAt: { type: Date },
-  creditsConsumed: { type: Number, default: 0 },
+
   definition: { type: String, default: '{}' }
 });
 
@@ -47,7 +47,7 @@ const executionPhaseSchema = new mongoose.Schema({
   completedAt: { type: Date },
   inputs: { type: String },
   outputs: { type: String },
-  creditsConsumed: { type: Number },
+
   workflowExecutionId: { type: mongoose.Schema.Types.ObjectId, ref: 'WorkflowExecution', required: true }
 });
 
@@ -57,12 +57,6 @@ const executionLogSchema = new mongoose.Schema({
   message: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
   executionPhaseId: { type: mongoose.Schema.Types.ObjectId, ref: 'ExecutionPhase', required: true }
-});
-
-// UserBalance Schema
-const userBalanceSchema = new mongoose.Schema({
-  userId: { type: String, required: true, unique: true },
-  credits: { type: Number, default: 0 }
 });
 
 // Credential Schema
@@ -75,21 +69,9 @@ const credentialSchema = new mongoose.Schema({
 
 credentialSchema.index({ userId: 1, name: 1 }, { unique: true });
 
-// UserPurchase Schema
-const userPurchaseSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  stripeId: { type: String, required: true },
-  description: { type: String, required: true },
-  amount: { type: Number, required: true },
-  currency: { type: String, required: true },
-  date: { type: Date, default: Date.now }
-});
-
 // Export models
 export const Workflow = mongoose.models.Workflow || mongoose.model('Workflow', workflowSchema);
 export const WorkflowExecution = mongoose.models.WorkflowExecution || mongoose.model('WorkflowExecution', workflowExecutionSchema);
 export const ExecutionPhase = mongoose.models.ExecutionPhase || mongoose.model('ExecutionPhase', executionPhaseSchema);
 export const ExecutionLog = mongoose.models.ExecutionLog || mongoose.model('ExecutionLog', executionLogSchema);
-export const UserBalance = mongoose.models.UserBalance || mongoose.model('UserBalance', userBalanceSchema);
 export const Credential = mongoose.models.Credential || mongoose.model('Credential', credentialSchema);
-export const UserPurchase = mongoose.models.UserPurchase || mongoose.model('UserPurchase', userPurchaseSchema);

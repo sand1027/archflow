@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import "server-only";
-import initDB, { WorkflowExecution, Workflow, ExecutionPhase, ExecutionLog, UserBalance } from "../prisma";
+import initDB, { WorkflowExecution, Workflow, ExecutionPhase, ExecutionLog } from "../prisma";
 import {
   AppNode,
   Enviornment,
@@ -40,7 +40,6 @@ export async function executeWorkflow(executionId: string, nextRunAt?: Date) {
   await initializePhaseStatues(phases);
 
   let executionFailed = false;
-  let creditsConsumed = 0;
 
   for (const phase of phases) {
     const phaseExecution = await executeWorkflowPhase(
@@ -49,7 +48,6 @@ export async function executeWorkflow(executionId: string, nextRunAt?: Date) {
       edges,
       execution.userId
     );
-    creditsConsumed += phaseExecution.creditsConsumed;
     if (!phaseExecution.success) {
       executionFailed = true;
       break;
@@ -59,8 +57,7 @@ export async function executeWorkflow(executionId: string, nextRunAt?: Date) {
   await finalizeWorkflowExecution(
     executionId,
     execution.workflowId.toString(),
-    executionFailed,
-    creditsConsumed
+    executionFailed
   );
   await cleanupEnviornment(enviornment);
 
@@ -102,8 +99,7 @@ async function initializePhaseStatues(phases: any[]) {
 async function finalizeWorkflowExecution(
   executionId: string,
   workflowId: string,
-  executionFailed: boolean,
-  creditsConsumed: number
+  executionFailed: boolean
 ) {
   const finalStatus = executionFailed
     ? WorkflowExecutionStatus.FAILED
@@ -112,7 +108,6 @@ async function finalizeWorkflowExecution(
   await WorkflowExecution.findByIdAndUpdate(executionId, {
     status: finalStatus,
     completedAt: new Date(),
-    creditsConsumed,
   });
 
   await Workflow.findOneAndUpdate(
@@ -145,31 +140,21 @@ async function executeWorkflowPhase(
     inputs: JSON.stringify(enviornment.phases[node.id].inputs),
   });
 
-  const creditsRequired = TaskRegistry[node.data.type].credits;
-
-  let success = await decrementCredits(userId, creditsRequired, logCollector);
-
-  const creditsConsumed = success ? creditsRequired : 0;
-  if (success) {
-    // executing phase only when credits are available and deducted
-    success = await executePhase(phase, node, enviornment, logCollector);
-  }
+  const success = await executePhase(phase, node, enviornment, logCollector);
   const outputs = enviornment.phases[node.id].outputs;
   await finalizePhase(
     phase._id.toString(),
     success,
     outputs,
-    creditsConsumed,
     logCollector
   );
-  return { success, creditsConsumed };
+  return { success };
 }
 
 async function finalizePhase(
   phaseId: string,
   success: boolean,
   outputs: Record<string, string>,
-  creditsConsumed: number,
   logCollector: LogCollector
 ) {
   const finalStatus = success
@@ -180,7 +165,6 @@ async function finalizePhase(
     status: finalStatus,
     completedAt: new Date(),
     outputs: JSON.stringify(outputs),
-    creditsConsumed,
   });
 
   // Create logs
@@ -285,25 +269,3 @@ async function cleanupEnviornment(enviornment: Enviornment) {
   }
 }
 
-async function decrementCredits(
-  userId: string,
-  amount: number,
-  logCollector: LogCollector
-) {
-  try {
-    const result = await UserBalance.findOneAndUpdate(
-      { userId, credits: { $gte: amount } },
-      { $inc: { credits: -amount } },
-      { new: true }
-    );
-    
-    if (!result) {
-      logCollector.error("Insufficient balance");
-      return false;
-    }
-    return true;
-  } catch (error) {
-    logCollector.error("Insufficient balance");
-    return false;
-  }
-}

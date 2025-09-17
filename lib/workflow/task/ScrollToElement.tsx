@@ -26,5 +26,4 @@ export const ScrollToElementTask = {
       type: TaskParamType.BROWSE_INSTANCE,
     },
   ] as const,
-  credits: 1,
 } satisfies WorkflowTask;

@@ -59,21 +59,15 @@ export async function getStatsCardsValue(period: Period) {
 
   const stats = {
     WorkflowExecutions: executions.length,
-    creditsConsumed: 0,
     phaseExecutions: 0,
   };
 
-  // Get phases for credit calculation
+  // Get phases count
   const executionIds = executions.map(e => e._id);
   const phases = await ExecutionPhase.find({
-    workflowExecutionId: { $in: executionIds },
-    creditsConsumed: { $ne: null }
+    workflowExecutionId: { $in: executionIds }
   });
 
-  stats.creditsConsumed = executions.reduce(
-    (sum, execution) => sum + (execution.creditsConsumed || 0),
-    0
-  );
   stats.phaseExecutions = phases.length;
 
   return stats;
@@ -133,53 +127,3 @@ export async function getWorkflowExecutionsStats(period: Period) {
   return result;
 }
 
-export async function getCreditsUsageInPeriod(period: Period) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
-
-  const dateRange = periodToDateRange(period);
-
-  await initDB();
-  const executionsPhases = await WorkflowExecution.find({
-    userId,
-    startedAt: {
-      $gte: dateRange.startDate,
-      $lte: dateRange.endDate,
-    },
-  });
-
-  const stats: WorkflowExecutionType = eachDayOfInterval({
-    start: dateRange.startDate,
-    end: dateRange.endDate,
-  })
-    .map((date) => format(date, "yyyy-MM-dd"))
-    .reduce((acc, date) => {
-      acc[date] = {
-        success: 0,
-        failed: 0,
-      };
-      return acc;
-    }, {} as any);
-
-  executionsPhases.forEach((phase) => {
-    const date = format(phase.startedAt!, "yyyy-MM-dd");
-
-    if (phase.status === ExecutionPhaseStatus.COMPLETED) {
-      stats[date].success! += phase.creditsConsumed || 0;
-    }
-
-    if (phase.status === ExecutionPhaseStatus.FAILED) {
-      stats[date].failed! += phase.creditsConsumed || 0;
-    }
-  });
-
-  const result = Object.entries(stats).map(([date, infos]) => ({
-    date,
-    ...infos,
-  }));
-
-  return result;
-}
