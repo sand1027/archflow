@@ -12,7 +12,7 @@ import {
 } from "../types";
 import { TaskRegistry } from "./task/Registry";
 import { ExecutorRegistry } from "./executor/Registry";
-import { Browser, Page } from "puppeteer";
+import { Browser, Page } from "playwright";
 import { Edge } from "@xyflow/react";
 import { createLogCollector } from "../log";
 

@@ -16,10 +16,13 @@ export async function WaitForElementExecutor(
       return false;
     }
 
-    await enviornment.getPage()!.waitForSelector(selector, {
-      visible: visibility === "visible",
-      hidden: visibility === "hidden",
-    });
+    if (visibility === "visible") {
+      await enviornment.getPage()!.waitForSelector(selector, { state: 'visible' });
+    } else if (visibility === "hidden") {
+      await enviornment.getPage()!.waitForSelector(selector, { state: 'hidden' });
+    } else {
+      await enviornment.getPage()!.waitForSelector(selector);
+    }
 
     enviornment.log.info(`Element ${selector} became: ${visibility}`);
 
