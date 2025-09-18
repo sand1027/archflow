@@ -1,16 +1,16 @@
 import { ExecutionEnviornment, TaskType, WorkflowTask } from "@/lib/types";
-import { LaunchBrowserExecutor } from "./LaunchBrowserExecutor";
-import { PageToHtmlExecutor } from "./PageToHtmlExecutor";
-import { ExtractTextFromElement } from "./ExtractTextFromElementExecutor";
-import { FillInputExecutor } from "./FillInputExecutor";
-import { ClickElementExecutor } from "./ClickElementExecutor";
-import { WaitForElementExecutor } from "./WaitForElementExecutor";
+import { StartExecutor } from "./StartExecutor";
+import { WebhookExecutor } from "./WebhookExecutor";
+import { ScheduleTriggerExecutor } from "./ScheduleTriggerExecutor";
+import { ManualTriggerExecutor } from "./ManualTriggerExecutor";
+import { HttpRequestExecutor } from "./HttpRequestExecutor";
+import { ConditionExecutor } from "./ConditionExecutor";
+import { OpenAIExecutor } from "./OpenAIExecutor";
+import { AnthropicExecutor } from "./AnthropicExecutor";
+import { HuggingFaceExecutor } from "./HuggingFaceExecutor";
 import { DeviverViaWebHookExecutor } from "./DeliverViaWebHookExecutor";
-import { ExtractDataWithAiExecutor } from "./ExtractDataWithAiExecutor";
 import { ReadPropertyFromJsonExecutor } from "./ReadPropertyFromJsonExecutor";
 import { AddPropertyToJsonExecutor } from "./AddPropertyToJsonExecutor ";
-import { NavigateUrlExecutor } from "./NavigateUrlExecutor";
-import { ScrollToElementExecutor } from "./ScrollToElementExecutor";
 
 type ExecutorFunction<T extends WorkflowTask> = (
   enviornment: ExecutionEnviornment<T>
@@ -21,16 +21,83 @@ type RegistryType = {
 };
 
 export const ExecutorRegistry: RegistryType = {
-  LAUNCH_BROWSER: LaunchBrowserExecutor,
-  PAGE_TO_HTML: PageToHtmlExecutor,
-  EXTRACT_TEXT_FROM_ELEMENT: ExtractTextFromElement,
-  FILL_INPUT: FillInputExecutor,
-  CLICK_ELEMENT: ClickElementExecutor,
-  WAIT_FOR_ELEMENT: WaitForElementExecutor,
+  // Core nodes
+  START: StartExecutor,
+  WEBHOOK: WebhookExecutor,
+  SCHEDULE_TRIGGER: ScheduleTriggerExecutor,
+  MANUAL_TRIGGER: ManualTriggerExecutor,
+  
+  // Google Workspace
+  GOOGLE_SHEETS: HttpRequestExecutor,
+  GOOGLE_DOCS: HttpRequestExecutor,
+  GOOGLE_DRIVE: HttpRequestExecutor,
+  GOOGLE_CALENDAR: HttpRequestExecutor,
+  GMAIL: HttpRequestExecutor,
+  
+  // Communication
+  SLACK: HttpRequestExecutor,
+  DISCORD: HttpRequestExecutor,
+  TELEGRAM: HttpRequestExecutor,
+  EMAIL: HttpRequestExecutor,
+  SMS: HttpRequestExecutor,
+  
+  // Social Media
+  TWITTER: HttpRequestExecutor,
+  LINKEDIN: HttpRequestExecutor,
+  FACEBOOK: HttpRequestExecutor,
+  INSTAGRAM: HttpRequestExecutor,
+  
+  // Development
+  GITHUB: HttpRequestExecutor,
+  GITLAB: HttpRequestExecutor,
+  JIRA: HttpRequestExecutor,
+  TRELLO: HttpRequestExecutor,
+  
+  // Data Processing
+  HTTP_REQUEST: HttpRequestExecutor,
+  JSON_PROCESSOR: ReadPropertyFromJsonExecutor,
+  CSV_PROCESSOR: HttpRequestExecutor,
+  TEXT_PROCESSOR: HttpRequestExecutor,
+  DATE_TIME: HttpRequestExecutor,
+  
+  // AI & ML
+  OPENAI: OpenAIExecutor,
+  ANTHROPIC: AnthropicExecutor,
+  HUGGING_FACE: HuggingFaceExecutor,
+  
+  // Database
+  MYSQL: HttpRequestExecutor,
+  POSTGRESQL: HttpRequestExecutor,
+  MONGODB: HttpRequestExecutor,
+  REDIS: HttpRequestExecutor,
+  
+  // Cloud Storage
+  AWS_S3: HttpRequestExecutor,
+  DROPBOX: HttpRequestExecutor,
+  ONEDRIVE: HttpRequestExecutor,
+  
+  // E-commerce
+  SHOPIFY: HttpRequestExecutor,
+  STRIPE: HttpRequestExecutor,
+  PAYPAL: HttpRequestExecutor,
+  
+  // Productivity
+  NOTION: HttpRequestExecutor,
+  AIRTABLE: HttpRequestExecutor,
+  TODOIST: HttpRequestExecutor,
+  ASANA: HttpRequestExecutor,
+  
+  // Utilities
+  DELAY: StartExecutor,
+  CONDITION: ConditionExecutor,
+  LOOP: ConditionExecutor,
+  MERGE: AddPropertyToJsonExecutor,
+  SPLIT: ReadPropertyFromJsonExecutor,
+  FILTER: ConditionExecutor,
+  SORT: HttpRequestExecutor,
+  
+  // Legacy
   DELIVER_VIA_WEBHOOK: DeviverViaWebHookExecutor,
-  EXTRACT_DATA_WITH_AI: ExtractDataWithAiExecutor,
   READ_PROPERTY_FROM_JSON: ReadPropertyFromJsonExecutor,
   ADD_PROPERTY_TO_JSON: AddPropertyToJsonExecutor,
-  NAVIGATE_URL: NavigateUrlExecutor,
-  SCROLL_TO_ELEMENT: ScrollToElementExecutor,
 };

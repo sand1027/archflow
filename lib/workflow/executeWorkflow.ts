@@ -12,7 +12,10 @@ import {
 } from "../types";
 import { TaskRegistry } from "./task/Registry";
 import { ExecutorRegistry } from "./executor/Registry";
-import { Browser, Page } from "playwright";
+import { CloudBrowser, CloudPage } from "../puppeteer";
+
+type Browser = CloudBrowser;
+type Page = CloudPage;
 import { Edge } from "@xyflow/react";
 import { createLogCollector } from "../log";
 

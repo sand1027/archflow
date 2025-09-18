@@ -38,24 +38,24 @@ function NodeHeader({
         <div className="flex gap-1 items-center">
           {task.isEntryPoint && <Badge className="py-1">Entry Point</Badge>}
 
-          {!task.isEntryPoint && (
-            <Fragment>
-              <Button
-                variant={"ghost"}
-                size={"icon"}
-                onClick={() =>
-                  deleteElements({
-                    nodes: [{ id: nodeId }],
-                  })
-                }
-              >
-                <TrashIcon size={12} />
-              </Button>
+          <Fragment>
+            <Button
+              variant={"ghost"}
+              size={"icon"}
+              onClick={() =>
+                deleteElements({
+                  nodes: [{ id: nodeId }],
+                })
+              }
+            >
+              <TrashIcon size={12} />
+            </Button>
+            {!task.isEntryPoint && (
               <Button variant={"ghost"} size={"icon"} onClick={copyNode}>
                 <CopyIcon size={12} />
               </Button>
-            </Fragment>
-          )}
+            )}
+          </Fragment>
           <Button
             variant={"ghost"}
             size={"icon"}

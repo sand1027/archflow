@@ -2,7 +2,7 @@ import {
   HomeIcon,
   Layers2Icon,
   ShieldCheckIcon,
-  GitBranchIcon,
+  BoxesIcon,
 } from "lucide-react";
 
 export const routes = [
@@ -16,16 +16,16 @@ export const routes = [
     label: "Workflows",
     icon: Layers2Icon,
   },
+
+  {
+    href: "/nodes",
+    label: "Node Library",
+    icon: BoxesIcon,
+  },
   {
     href: "/credentials",
     label: "Credentials",
     icon: ShieldCheckIcon,
-  },
-
-  {
-    href: "/github-scraper",
-    label: "GitHub Scraper",
-    icon: GitBranchIcon,
   },
 ];
 
@@ -52,15 +52,12 @@ export const typeWriterWords = [
     text: "Powerful",
   },
   {
-    text: "Web",
-    className: "text-primary dark:text-primary",
-  },
-  {
-    text: "Scraping",
+    text: "Automation",
     className: "text-primary dark:text-primary",
   },
   {
     text: "Workflows.",
+    className: "text-primary dark:text-primary",
   },
 ];
 
@@ -68,23 +65,22 @@ export const howItWorks = [
   {
     title: "Build Your Workflow",
     description:
-      "Create powerful workflows with intuitive tools and actions, simplifying complex scraping tasks.",
+      "Create powerful automation workflows with intuitive drag-and-drop tools and pre-built integrations.",
   },
   {
-    title: "Scrape with Precision",
+    title: "Connect Everything",
     description:
-      "Extract data efficiently from any web page using advanced tools, including AI-powered data extraction.",
-  },
-
-  {
-    title: "Automate and Optimize",
-    description:
-      "Schedule workflows, monitor execution stats, and optimize processes for maximum efficiency.",
+      "Integrate with Google Sheets, Slack, Discord, OpenAI, and 50+ other services seamlessly.",
   },
   {
-    title: "Deliver Anywhere",
+    title: "Automate and Scale",
     description:
-      "Send your scraped data directly to APIs, webhooks, or your preferred storage seamlessly.",
+      "Schedule workflows, monitor execution stats, and scale your automation processes efficiently.",
+  },
+  {
+    title: "Student-Friendly",
+    description:
+      "Perfect for students to automate assignments, projects, and daily tasks with easy-to-use tools.",
   },
 ];
 
@@ -95,11 +91,10 @@ export const headerRoutes = [
     className: "",
   },
   {
-    title: "Scraping Features",
-    href: "#scrapingFeatures",
+    title: "Automation Features",
+    href: "#automationFeatures",
     className: "",
   },
-
   {
     title: "Get Started",
     href: "/sign-in",

@@ -15,7 +15,7 @@ import {
 } from "@xyflow/react";
 import React, { useCallback, useEffect } from "react";
 import "@xyflow/react/dist/style.css";
-import { AppNode, TaskType } from "@/lib/types";
+import { AppNode, TaskType, TaskParamType } from "@/lib/types";
 import { createFlowNode } from "@/lib/workflow/CreateFlowNode";
 import NodeComponent from "./nodes/NodeComponent";
 import DeletableEdge from "./edges/DeletableEdge";
@@ -30,7 +30,7 @@ const edgeTypes = {
 
 const snapgird: [number, number] = [50, 50];
 
-const fitViewOptions = { padding: 1 };
+const fitViewOptions = { padding: 0.3, minZoom: 0.5, maxZoom: 1.5 };
 
 function FlowEditor({ workflow }: { workflow: any }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
@@ -44,10 +44,10 @@ function FlowEditor({ workflow }: { workflow: any }) {
       setNodes(flow.nodes || []);
       setEdges(flow.edges || []);
 
-      //TODO:  Optional flow for restoring the view-port used by user for project
-      // if (!flow.viewport) return;
-      // const { x = 0, y = 0, zoom = 1 } = flow.viewport;
-      // setViewport({ x, y, zoom });
+      // Set default zoom to be more zoomed out
+      setTimeout(() => {
+        setViewport({ x: 0, y: 0, zoom: 0.75 });
+      }, 100);
     } catch (error) {}
   }, [workflow, setEdges, setNodes, setViewport]);
 
@@ -93,49 +93,91 @@ function FlowEditor({ workflow }: { workflow: any }) {
 
   const isValidConnection = useCallback(
     (connection: Edge | Connection) => {
-      // No self-connection
-      if (connection.source === connection.target) return false;
-
-      // Same type connections
-      const sourceNode = nodes.find((node) => node.id === connection.source);
-      const targetNode = nodes.find((node) => node.id === connection.target);
-
-      if (!sourceNode || !targetNode) {
-        console.log("Source or target not found");
-        return false;
-      }
-
-      const sourceTask = TaskRegistry[sourceNode.data.type];
-      const targetTask = TaskRegistry[targetNode.data.type];
-
-      const output = sourceTask.outputs.find(
-        (o) => o.name === connection.sourceHandle
-      );
-      const input = targetTask.inputs.find(
-        (i) => i.name === connection.targetHandle
-      );
-
-      if (input?.type !== output?.type) {
-        console.log("Invalid connection");
-        return false;
-      }
-
-      // Avoid cyclic connections :: DOCS_GRAPH
-      const hasCycle = (node: AppNode, visited = new Set()) => {
-        if (visited.has(node.id)) return false;
-
-        visited.add(node.id);
-
-        for (const outgoer of getOutgoers(node, nodes, edges)) {
-          if (outgoer.id === connection.source) return true;
-          if (hasCycle(outgoer, visited)) return true;
+      try {
+        // No self-connection
+        if (connection.source === connection.target) {
+          console.log("Cannot connect node to itself");
+          return false;
         }
-      };
 
-      const detectedCycle = hasCycle(targetNode);
-      return !detectedCycle;
+        // Find source and target nodes
+        const sourceNode = nodes.find((node) => node.id === connection.source);
+        const targetNode = nodes.find((node) => node.id === connection.target);
+
+        if (!sourceNode || !targetNode) {
+          console.log("Source or target node not found");
+          return false;
+        }
+
+        // Get task definitions
+        const sourceTask = TaskRegistry[sourceNode.data.type];
+        const targetTask = TaskRegistry[targetNode.data.type];
+
+        if (!sourceTask || !targetTask) {
+          console.log("Task definition not found");
+          return false;
+        }
+
+        // Find the specific output and input being connected
+        const output = sourceTask.outputs?.find(
+          (o) => o.name === connection.sourceHandle
+        );
+        const input = targetTask.inputs?.find(
+          (i) => i.name === connection.targetHandle
+        );
+
+        if (!output || !input) {
+          console.log("Output or input handle not found");
+          return false;
+        }
+
+        // Type compatibility check - allow flexible connections
+        const isCompatible = 
+          output.type === input.type || 
+          output.type === TaskParamType.STRING || 
+          input.type === TaskParamType.STRING ||
+          (output.type === TaskParamType.BROWSER_INSTANCE && input.type === TaskParamType.BROWSER_INSTANCE);
+
+        if (!isCompatible) {
+          console.log(`Type mismatch: ${output.type} -> ${input.type}`);
+          return false;
+        }
+
+        // Check for cycles
+        const hasCycle = (node: AppNode, visited = new Set<string>()) => {
+          if (visited.has(node.id)) return false;
+          visited.add(node.id);
+
+          for (const outgoer of getOutgoers(node, nodes, edges)) {
+            if (outgoer.id === connection.source) return true;
+            if (hasCycle(outgoer, visited)) return true;
+          }
+          return false;
+        };
+
+        if (hasCycle(targetNode)) {
+          console.log("Connection would create a cycle");
+          return false;
+        }
+
+        // Check if target input already has a connection
+        const existingConnection = edges.find(
+          (edge) => 
+            edge.target === connection.target && 
+            edge.targetHandle === connection.targetHandle
+        );
+
+        if (existingConnection) {
+          console.log("Target input already connected");
+          return false;
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Connection validation error:", error);
+        return false;
+      }
     },
-
     [nodes, edges]
   );
 
