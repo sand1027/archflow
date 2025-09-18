@@ -1,6 +1,6 @@
 import { AppProviders } from "@/components/providers/AppProviders";
 import { Toaster } from "@/components/ui/sonner";
-import { ClerkWrapper } from "@/components/providers/ClerkWrapper";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -21,13 +21,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkWrapper>
+    <AuthProvider>
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
           <AppProviders>{children}</AppProviders>
           <Toaster richColors />
         </body>
       </html>
-    </ClerkWrapper>
+    </AuthProvider>
   );
 }

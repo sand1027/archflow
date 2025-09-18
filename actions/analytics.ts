@@ -8,15 +8,11 @@ import {
   WorkflowExecutionStatus,
   WorkflowExecutionType,
 } from "@/lib/types";
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth } from "@/lib/auth-utils";
 import { eachDayOfInterval, format } from "date-fns";
 
 export async function getPeriods() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   await initDB();
   const executions = await WorkflowExecution.find({ userId }).sort({ startedAt: 1 }).limit(1);
@@ -37,11 +33,7 @@ export async function getPeriods() {
 }
 
 export async function getStatsCardsValue(period: Period) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   const dateRange = periodToDateRange(period);
 
@@ -74,11 +66,7 @@ export async function getStatsCardsValue(period: Period) {
 }
 
 export async function getWorkflowExecutionsStats(period: Period) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   const dateRange = periodToDateRange(period);
 
@@ -126,4 +114,3 @@ export async function getWorkflowExecutionsStats(period: Period) {
 
   return result;
 }
-

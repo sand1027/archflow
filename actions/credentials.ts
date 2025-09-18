@@ -6,15 +6,11 @@ import {
   createCredentialSchema,
   createCredentialSchemaType,
 } from "@/schema/credential";
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth } from "@/lib/auth-utils";
 import { revalidatePath } from "next/cache";
 
 export async function getUserCredentials() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   await initDB();
   return await Credential.find({ userId }).sort({ name: 1 }).lean();
@@ -27,11 +23,7 @@ export async function createCredential(form: createCredentialSchemaType) {
     throw new Error("Invalid form data");
   }
 
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   const encryptedValue = symmetricEncrypt(data.value);
 
@@ -49,11 +41,7 @@ export async function createCredential(form: createCredentialSchemaType) {
 }
 
 export async function deleteCredential(id: string) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   await initDB();
   await Credential.findOneAndDelete({ _id: id, userId });
