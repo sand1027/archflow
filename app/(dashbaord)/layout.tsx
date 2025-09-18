@@ -4,6 +4,7 @@ import { ModeToggle } from "@/components/ThemeToggle";
 import { Separator } from "@/components/ui/separator";
 import { UserButton } from "@/components/UserButton";
 import { AuthGuard } from "@/components/AuthGuard";
+import { Analytics } from "@vercel/analytics/next"
 import React from "react";
 
 function layout({ children }: { children: React.ReactNode }) {
@@ -27,6 +28,7 @@ function layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </div>
+      <Analytics />
     </AuthGuard>
   );
 }
