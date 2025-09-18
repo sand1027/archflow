@@ -1,14 +1,10 @@
 "use server";
 
 import initDB, { Workflow } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth } from "@/lib/auth-utils";
 
 export async function cleanupOldWorkflows() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   await initDB();
   

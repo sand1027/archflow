@@ -97,7 +97,7 @@ export const headerRoutes = [
   },
   {
     title: "Get Started",
-    href: "/sign-in",
+    href: "/auth/signin",
     className: "",
     button: true,
   },

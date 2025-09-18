@@ -1,19 +1,39 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/api/workflows(.*)",
-  "/api/webhooks/stripe",
-  "/api/github-scraper",
+const publicRoutes = [
   "/",
-]);
+  "/auth/signin",
+  "/auth/error",
+  "/api/auth",
+  "/api/workflows",
+];
 
-export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect();
+export default withAuth(
+  function middleware(req) {
+    const { pathname } = req.nextUrl;
+    
+    // Allow public routes
+    if (publicRoutes.some(route => pathname.startsWith(route))) {
+      return NextResponse.next();
+    }
+    
+    // Redirect to signin if not authenticated
+    if (!req.nextauth.token) {
+      return NextResponse.redirect(new URL("/auth/signin", req.url));
+    }
+    
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        const { pathname } = req.nextUrl;
+        return publicRoutes.some(route => pathname.startsWith(route)) || !!token;
+      },
+    },
   }
-});
+);
 
 export const config = {
   matcher: [

@@ -11,18 +11,14 @@ import {
   createWorkflowShemaType,
   duplicateWorkflowSchemaType,
 } from "@/schema/workflows";
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth } from "@/lib/auth-utils";
 import { Edge } from "@xyflow/react";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import parser from "cron-parser";
 
 export async function getWorkflowsForUser() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
   await initDB();
   return Workflow.find({ userId }).sort({ createdAt: 1 }).lean();
 }
@@ -34,11 +30,7 @@ export async function createWorkflow(form: createWorkflowShemaType) {
     throw new Error("Invalid form data");
   }
 
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   try {
     const initWorkflow: { nodes: AppNode[]; edges: Edge[] } = {
@@ -72,11 +64,7 @@ export async function createWorkflow(form: createWorkflowShemaType) {
 }
 
 export async function deleteWorkflow(workflowId: string) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   await initDB();
   await Workflow.findOneAndDelete({ _id: workflowId, userId });
@@ -91,11 +79,7 @@ export async function updateWorkFlow({
   id: string;
   definition: string;
 }) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   await initDB();
   const workflow = await Workflow.findOne({ _id: id, userId });
@@ -116,11 +100,7 @@ export async function updateWorkFlow({
 }
 
 export async function getWorkflowExecutionWithPhases(executionId: string) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   await initDB();
   const execution = await WorkflowExecution.findOne({ _id: executionId, userId }).lean();
@@ -131,11 +111,7 @@ export async function getWorkflowExecutionWithPhases(executionId: string) {
 }
 
 export async function getWorkflowPhaseDetails(phaseId: string) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   if (!phaseId || phaseId.trim() === "") {
     return null;
@@ -153,11 +129,7 @@ export async function getWorkflowPhaseDetails(phaseId: string) {
 }
 
 export async function getWorkflowExecutions(workflowId: string) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   await initDB();
   return await WorkflowExecution.find({ workflowId, userId }).sort({ createdAt: 1 }).lean();
@@ -170,11 +142,7 @@ export async function publishWorkflow({
   id: string;
   flowDefinition: string;
 }) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   await initDB();
   const workflow = await Workflow.findOne({ _id: id, userId });
@@ -214,11 +182,7 @@ export async function publishWorkflow({
 }
 
 export async function unPublishWorkflow(id: string) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
   await initDB();
   const workflow = await Workflow.findOne({ _id: id, userId });
   if (!workflow) {
@@ -248,11 +212,7 @@ export async function updateWorkFlowCron({
   id: string;
   cron: string;
 }) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   try {
     await initDB();
@@ -273,11 +233,7 @@ export async function updateWorkFlowCron({
 }
 
 export async function removeWorkflowSchedule(id: string) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
   await initDB();
   await Workflow.findOneAndUpdate(
     { _id: id, userId },
@@ -296,11 +252,7 @@ export async function duplicateWorkflow(form: duplicateWorkflowSchemaType) {
     throw new Error("Invalid form data");
   }
 
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthenticated");
-  }
+  const { userId } = await requireAuth();
 
   await initDB();
   const sourceWorkflow = await Workflow.findOne({ _id: form.workflowId, userId });
