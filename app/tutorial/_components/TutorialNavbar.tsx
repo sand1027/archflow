@@ -28,7 +28,7 @@ export default function TutorialNavbar() {
           <div className="flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              WorkFlex Tutorial
+              ArchFlow Tutorial
             </h1>
           </div>
 

@@ -11,7 +11,9 @@ export const metadata: Metadata = {
   title: "ArchFlow",
   description: "Build your own workflows and automate tasks with ease",
   openGraph: {
-    images: `${process.env.APP_URL}/og-image.png`,
+    title: "ArchFlow - Workflow Automation Platform",
+    description: "Build powerful automation workflows with drag-and-drop interface. Perfect for students and professionals.",
+    type: "website",
   },
 };
 
