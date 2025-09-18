@@ -12,7 +12,7 @@ interface ConnectionGuideProps {
   sourceType: TaskType;
 }
 
-const connectionMap: Record<TaskType, TaskType[]> = {
+const connectionMap: Partial<Record<TaskType, TaskType[]>> = {
   [TaskType.START]: [TaskType.HTTP_REQUEST, TaskType.OPENAI, TaskType.GOOGLE_SHEETS, TaskType.SLACK, TaskType.CONDITION],
   [TaskType.WEBHOOK]: [TaskType.CONDITION, TaskType.GOOGLE_SHEETS, TaskType.SLACK, TaskType.OPENAI, TaskType.HTTP_REQUEST],
   [TaskType.SCHEDULE_TRIGGER]: [TaskType.OPENAI, TaskType.HTTP_REQUEST, TaskType.GOOGLE_SHEETS, TaskType.GMAIL, TaskType.NOTION],
@@ -31,7 +31,7 @@ const connectionMap: Record<TaskType, TaskType[]> = {
   [TaskType.DELAY]: [TaskType.SLACK, TaskType.GMAIL, TaskType.HTTP_REQUEST]
 };
 
-const inputConnectionMap: Record<TaskType, Record<string, string[]>> = {
+const inputConnectionMap: Partial<Record<TaskType, Record<string, string[]>>> = {
   [TaskType.HTTP_REQUEST]: {
     "URL": ["Any STRING output", "Manual input"],
     "Headers": ["JSON data", "Manual JSON input"],
@@ -62,7 +62,7 @@ export default function ConnectionGuide({ sourceType }: ConnectionGuideProps) {
   if (!sourceTask) return null;
 
   const getConnectionReason = (source: TaskType, target: TaskType): string => {
-    const reasons: Record<string, string> = {
+    const reasons: { [key: string]: string } = {
       [`${TaskType.START}-${TaskType.HTTP_REQUEST}`]: "Trigger API calls",
       [`${TaskType.START}-${TaskType.OPENAI}`]: "Generate AI content",
       [`${TaskType.HTTP_REQUEST}-${TaskType.JSON_PROCESSOR}`]: "Process API response",
@@ -78,7 +78,12 @@ export default function ConnectionGuide({ sourceType }: ConnectionGuideProps) {
   };
 
   const getConnectionDemo = (sourceType: TaskType) => {
-    const demos = {
+    const demos: Partial<Record<TaskType, {
+      targetType: TaskType;
+      sourceOutput: string;
+      targetInput: string;
+      description: string;
+    }>> = {
       [TaskType.START]: {
         targetType: TaskType.HTTP_REQUEST,
         sourceOutput: "trigger",

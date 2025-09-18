@@ -42,7 +42,7 @@ export async function ConditionExecutor(
         result = !value1 || value1.trim() === "";
         break;
       case "is_not_empty":
-        result = value1 && value1.trim() !== "";
+        result = !!(value1 && value1.trim() !== "");
         break;
       default:
         enviornment.log.error(`Unknown operator: ${operator}`);

@@ -36,7 +36,7 @@ function SelectParam({ param, updateNodeParamValue, value }: ParamProps) {
         <SelectContent>
           <SelectGroup>
             <SelectLabel>Options</SelectLabel>
-            {param.options.map((option: OptionType) => (
+            {(param as any).options?.map((option: OptionType) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>

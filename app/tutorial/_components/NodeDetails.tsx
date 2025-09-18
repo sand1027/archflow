@@ -17,7 +17,7 @@ export default function NodeDetails({ taskType }: NodeDetailsProps) {
   if (!task) return null;
 
   const getSetupSteps = (nodeType: TaskType): string[] => {
-    const steps = {
+    const steps: Partial<Record<TaskType, string[]>> = {
       [TaskType.START]: [
         "Drag the Start node to your canvas",
         "This node requires no configuration",
@@ -52,7 +52,7 @@ export default function NodeDetails({ taskType }: NodeDetailsProps) {
   };
 
   const getConnectionExamples = (nodeType: TaskType): string[] => {
-    const examples = {
+    const examples: Partial<Record<TaskType, string[]>> = {
       [TaskType.START]: [
         "Start → HTTP Request (Fetch data from API)",
         "Start → OpenAI → Slack (Generate AI content and send to Slack)"
@@ -100,8 +100,8 @@ export default function NodeDetails({ taskType }: NodeDetailsProps) {
                       <Badge variant="outline">{input.type}</Badge>
                     </div>
                   </div>
-                  {input.helperText && (
-                    <p className="text-sm text-muted-foreground">{input.helperText}</p>
+                  {(input as any).helperText && (
+                    <p className="text-sm text-muted-foreground">{(input as any).helperText}</p>
                   )}
                 </div>
               ))}
@@ -128,8 +128,8 @@ export default function NodeDetails({ taskType }: NodeDetailsProps) {
                   <span className="font-medium">{output.name}</span>
                   <Badge variant="outline" className="bg-green-100 dark:bg-green-900">{output.type}</Badge>
                 </div>
-                {output.helperText && (
-                  <p className="text-sm text-muted-foreground">{output.helperText}</p>
+                {(output as any).helperText && (
+                  <p className="text-sm text-muted-foreground">{(output as any).helperText}</p>
                 )}
               </div>
             ))}
