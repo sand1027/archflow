@@ -4,8 +4,12 @@ import { ReactNode } from "react";
 export function ClerkWrapper({ children }: { children: ReactNode }) {
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   
+  // Always render children during build time
+  if (typeof window === 'undefined' && !publishableKey) {
+    return <>{children}</>;
+  }
+  
   if (!publishableKey) {
-    // Return children without Clerk wrapper if no key is provided
     return <>{children}</>;
   }
 
