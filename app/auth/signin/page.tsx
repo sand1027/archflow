@@ -70,7 +70,7 @@ export default function SignIn() {
           <div className="flex justify-center">
             <Logo />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">Welcome to WorkFlex</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white">Welcome to ArchFlow</CardTitle>
           <CardDescription className="text-gray-400">
             Sign in to start building powerful automation workflows
           </CardDescription>
