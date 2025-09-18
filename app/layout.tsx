@@ -8,7 +8,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "WorkFlex",
+  title: "ArchFlow",
   description: "Build your own workflows and automate tasks with ease",
   openGraph: {
     images: `${process.env.APP_URL}/og-image.png`,
