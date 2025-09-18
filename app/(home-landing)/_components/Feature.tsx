@@ -17,88 +17,88 @@ import {
 export function FeaturesSection() {
   const features = [
     {
-      title: "Launch browser",
+      title: "Google Sheets Integration",
       description:
-        "Initiates a browser instance to begin the web scraping process, enabling interaction with web pages.",
-      icon: <GlobeIcon className="stroke-pink-400" />,
-      hoverChipClassName: "group-hover/feature:bg-pink-500",
+        "Read, write, and update Google Sheets data seamlessly. Perfect for managing student assignments and project data.",
+      icon: <DatabaseIcon className="stroke-green-400" />,
+      hoverChipClassName: "group-hover/feature:bg-green-500",
     },
     {
-      title: "Page to HTML",
+      title: "Slack & Discord Bots",
       description:
-        "Extracts the complete HTML content of the current page for detailed analysis and processing.",
-      icon: <CodeIcon className="stroke-rose-400" />,
-      hoverChipClassName: "group-hover/feature:bg-rose-500",
+        "Send messages, create channels, and automate communication across your favorite platforms.",
+      icon: <SendIcon className="stroke-purple-400" />,
+      hoverChipClassName: "group-hover/feature:bg-purple-500",
     },
     {
-      title: "Extract text from element",
+      title: "OpenAI Integration",
       description:
-        "Retrieves the text content from a specified HTML element using a given CSS selector.",
-      icon: <TextIcon className="stroke-rose-400" />,
-      hoverChipClassName: "group-hover/feature:bg-rose-500",
+        "Leverage AI for text generation, data analysis, and intelligent automation workflows.",
+      icon: <BrainIcon className="stroke-emerald-400" />,
+      hoverChipClassName: "group-hover/feature:bg-emerald-500",
     },
     {
-      title: "Fill input",
+      title: "HTTP API Requests",
       description:
-        "Automatically fills a specified input field with a desired value, emulating user input.",
-      icon: <Edit3Icon className="stroke-orange-400" />,
-      hoverChipClassName: "group-hover/feature:bg-orange-500",
+        "Connect to any REST API with GET, POST, PUT, DELETE requests. Integrate with thousands of services.",
+      icon: <GlobeIcon className="stroke-blue-400" />,
+      hoverChipClassName: "group-hover/feature:bg-blue-500",
     },
     {
-      title: "Click Element",
+      title: "Gmail Automation",
       description:
-        "Simulates a click action on a specified HTML element, triggering any associated events or navigation.",
-      icon: <MousePointerClick className="stroke-orange-400" />,
-      hoverChipClassName: -'group.hover/feature:bg-"-500',
+        "Send emails, read messages, and automate your email workflows for assignments and notifications.",
+      icon: <SendIcon className="stroke-red-400" />,
+      hoverChipClassName: "group-hover/feature:bg-red-500",
     },
     {
-      title: "Scroll to element",
+      title: "Conditional Logic",
       description:
-        "Scrolls to a specified element on the page, emulating user behavior for dynamic content loading.",
-      icon: <MouseIcon className="stroke-orange-400" />,
-      hoverChipClassName: "group-hover/feature:bg-orange-500",
+        "Add smart decision-making to your workflows with if-then conditions and branching logic.",
+      icon: <CodeIcon className="stroke-yellow-400" />,
+      hoverChipClassName: "group-hover/feature:bg-yellow-500",
     },
     {
-      title: "Wait for element",
+      title: "Notion Integration",
       description:
-        "Pauses the workflow until a specified element becomes visible or hidden on the page.",
+        "Create pages, update databases, and organize your student life with powerful Notion automation.",
+      icon: <Edit3Icon className="stroke-gray-400" />,
+      hoverChipClassName: "group-hover/feature:bg-gray-500",
+    },
+    {
+      title: "Schedule Triggers",
+      description:
+        "Run workflows automatically on schedules - daily reminders, weekly reports, or custom intervals.",
       icon: <EyeIcon className="stroke-amber-400" />,
       hoverChipClassName: "group-hover/feature:bg-amber-500",
     },
     {
-      title: "Deliver via webhook",
+      title: "JSON Processing",
       description:
-        "Sends the scraped data to an external API endpoint through a POST request for further processing or storage.",
-      icon: <SendIcon className="stroke-blue-400" />,
-      hoverChipClassName: "group-hover/feature:bg-blue-500",
-    },
-    {
-      title: "Extract data via AI",
-      description:
-        "Uses AI to parse HTML content and extract structured data based on a custom prompt, returning JSON output.",
-      icon: <BrainIcon className="stroke-rose-400" />,
-      hoverChipClassName: "group-hover/feature:bg-rose-500",
-    },
-    {
-      title: "Read JSON",
-      description:
-        "Reads and retrieves a specific key or property from a JSON object for use in workflows.",
+        "Parse, filter, and transform JSON data between different services and APIs effortlessly.",
       icon: <FileJson2Icon className="stroke-orange-400" />,
       hoverChipClassName: "group-hover/feature:bg-orange-500",
     },
     {
-      title: "Build JSON",
+      title: "Social Media APIs",
       description:
-        "Adds or updates data within an existing JSON object or creates a new one with the specified properties.",
-      icon: <DatabaseIcon className="stroke-orange-400" />,
-      hoverChipClassName: "group-hover/feature:bg-orange-500",
+        "Connect to Twitter, LinkedIn, Facebook, and Instagram for social media automation and monitoring.",
+      icon: <Link2Icon className="stroke-pink-400" />,
+      hoverChipClassName: "group-hover/feature:bg-pink-500",
     },
     {
-      title: "Navigate to URL",
+      title: "Database Connections",
       description:
-        "Navigates to a specified URL, loading the desired web page for scraping or interaction.",
-      icon: <Link2Icon className="stroke-orange-400" />,
-      hoverChipClassName: "group-hover/feature:bg-orange-500",
+        "Connect to MySQL, PostgreSQL, MongoDB, and Redis for powerful data storage and retrieval.",
+      icon: <DatabaseIcon className="stroke-indigo-400" />,
+      hoverChipClassName: "group-hover/feature:bg-indigo-500",
+    },
+    {
+      title: "Cloud Storage",
+      description:
+        "Integrate with AWS S3, Dropbox, and OneDrive for file storage and management automation.",
+      icon: <GlobeIcon className="stroke-cyan-400" />,
+      hoverChipClassName: "group-hover/feature:bg-cyan-500",
     },
   ];
 

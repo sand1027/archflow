@@ -45,7 +45,7 @@ export async function createWorkflow(form: createWorkflowShemaType) {
       nodes: [],
       edges: [],
     };
-    initWorkflow.nodes.push(createFlowNode(TaskType.LAUNCH_BROWSER));
+    initWorkflow.nodes.push(createFlowNode(TaskType.START));
     await initDB();
     const result = await Workflow.create({
       userId,

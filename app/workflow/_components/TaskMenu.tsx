@@ -20,58 +20,77 @@ function TaskMenu() {
         type="multiple"
         className="w-full"
         defaultValue={[
-          "extraction",
-          "interactions",
-          "timings",
-          "results",
-          "storage",
+          "core",
+          "google",
+          "communication",
+          "ai",
+          "data",
+          "utilities",
         ]}
       >
-        <AccordionItem value="interactions">
+        <AccordionItem value="core">
           <AccordionTrigger className="font-bold">
-            User Interactions
+            Core Triggers
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-1">
-            <TaskMenuButton taskType={TaskType.FILL_INPUT} />
-            <TaskMenuButton taskType={TaskType.CLICK_ELEMENT} />
-            <TaskMenuButton taskType={TaskType.NAVIGATE_URL} />
-            <TaskMenuButton taskType={TaskType.SCROLL_TO_ELEMENT} />
+            <TaskMenuButton taskType={TaskType.START} />
+            <TaskMenuButton taskType={TaskType.WEBHOOK} />
+            <TaskMenuButton taskType={TaskType.SCHEDULE_TRIGGER} />
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="extraction">
+        <AccordionItem value="google">
           <AccordionTrigger className="font-bold">
-            Data Extraction
+            Google Workspace
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-1">
-            <TaskMenuButton taskType={TaskType.PAGE_TO_HTML} />
-            <TaskMenuButton taskType={TaskType.EXTRACT_TEXT_FROM_ELEMENT} />
-            <TaskMenuButton taskType={TaskType.EXTRACT_DATA_WITH_AI} />
+            <TaskMenuButton taskType={TaskType.GOOGLE_SHEETS} />
+            <TaskMenuButton taskType={TaskType.GMAIL} />
+            <TaskMenuButton taskType={TaskType.GOOGLE_DRIVE} />
+            <TaskMenuButton taskType={TaskType.GOOGLE_CALENDAR} />
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="storage">
+        <AccordionItem value="communication">
           <AccordionTrigger className="font-bold">
-            Data Storage
+            Communication
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-1">
+            <TaskMenuButton taskType={TaskType.SLACK} />
+            <TaskMenuButton taskType={TaskType.DISCORD} />
+            <TaskMenuButton taskType={TaskType.EMAIL} />
+            <TaskMenuButton taskType={TaskType.SMS} />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="ai">
+          <AccordionTrigger className="font-bold">
+            AI & ML
+          </AccordionTrigger>
+          <AccordionContent className="flex flex-col gap-1">
+            <TaskMenuButton taskType={TaskType.OPENAI} />
+            <TaskMenuButton taskType={TaskType.ANTHROPIC} />
+            <TaskMenuButton taskType={TaskType.HUGGING_FACE} />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="data">
+          <AccordionTrigger className="font-bold">
+            Data Processing
+          </AccordionTrigger>
+          <AccordionContent className="flex flex-col gap-1">
+            <TaskMenuButton taskType={TaskType.HTTP_REQUEST} />
+            <TaskMenuButton taskType={TaskType.JSON_PROCESSOR} />
             <TaskMenuButton taskType={TaskType.READ_PROPERTY_FROM_JSON} />
             <TaskMenuButton taskType={TaskType.ADD_PROPERTY_TO_JSON} />
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="timings">
+        <AccordionItem value="utilities">
           <AccordionTrigger className="font-bold">
-            Timing Controls
+            Utilities
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-1">
-            <TaskMenuButton taskType={TaskType.WAIT_FOR_ELEMENT} />
+            <TaskMenuButton taskType={TaskType.CONDITION} />
+            <TaskMenuButton taskType={TaskType.DELAY} />
+            <TaskMenuButton taskType={TaskType.DELIVER_VIA_WEBHOOK} />
+            <TaskMenuButton taskType={TaskType.NOTION} />
           </AccordionContent>
-          <AccordionItem value="results">
-            <AccordionTrigger className="font-bold">
-              Result delivery
-            </AccordionTrigger>
-            <AccordionContent className="flex flex-col gap-1">
-              <TaskMenuButton taskType={TaskType.DELIVER_VIA_WEBHOOK} />
-            </AccordionContent>
-          </AccordionItem>
         </AccordionItem>
       </Accordion>
     </aside>
@@ -82,10 +101,16 @@ export default TaskMenu;
 
 function TaskMenuButton({ taskType }: { taskType: TaskType }) {
   const task = TaskRegistry[taskType];
+  
+  if (!task || !task.icon) {
+    return null;
+  }
+  
   const onDragStart = (event: React.DragEvent) => {
     event.dataTransfer.setData("application/reactflow", taskType);
     event.dataTransfer.effectAllowed = "move";
   };
+  
   return (
     <Button
       variant={"secondary"}
@@ -97,7 +122,6 @@ function TaskMenuButton({ taskType }: { taskType: TaskType }) {
         <task.icon size={20} />
         {task.label}
       </div>
-
     </Button>
   );
 }

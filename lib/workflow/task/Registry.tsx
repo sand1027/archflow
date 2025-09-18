@@ -1,32 +1,104 @@
 import { TaskType, WorkflowTask } from "@/lib/types";
-import { ExtractTextFromElementTask } from "./ExtractTextFromElement";
-import { LaunchBrowserTask } from "./LaunchBrowser";
-import { PageToHtmlTask } from "./PageToHtml";
-import { FillInputTask } from "./FillInput";
-import { ClickElementTask } from "./ClickElement";
-import { WaitForElementTask } from "./WaitForElement";
+import { StartTask } from "./Start";
+import { WebhookTask } from "./Webhook";
+import { ScheduleTriggerTask } from "./ScheduleTrigger";
+import { ManualTriggerTask } from "./ManualTrigger";
+import { GoogleSheetsTask } from "./GoogleSheets";
+import { SlackTask } from "./Slack";
+import { HttpRequestTask } from "./HttpRequest";
+import { OpenAITask } from "./OpenAI";
+import { AnthropicTask } from "./Anthropic";
+import { HuggingFaceTask } from "./HuggingFace";
+import { DiscordTask } from "./Discord";
+import { GmailTask } from "./Gmail";
+import { ConditionTask } from "./Condition";
+import { NotionTask } from "./Notion";
 import { DeliverViaWebHookTask } from "./DeliverViaWebHook";
-import { ExtractDataWithAiTask } from "./ExtractDataWithAi";
 import { ReadPropertyFromJsonTask } from "./ReadPropertyFromJson";
 import { AddPropertyToJsonTask } from "./AddPropertyToJson";
-import { NavigateUrlTask } from "./NavigateUrl";
-import { ScrollToElementTask } from "./ScrollToElement";
 
 type Registry = {
   [key in TaskType]: WorkflowTask & { type: key };
 };
 
 export const TaskRegistry: Registry = {
-  LAUNCH_BROWSER: LaunchBrowserTask,
-  PAGE_TO_HTML: PageToHtmlTask,
-  EXTRACT_TEXT_FROM_ELEMENT: ExtractTextFromElementTask,
-  FILL_INPUT: FillInputTask,
-  CLICK_ELEMENT: ClickElementTask,
-  WAIT_FOR_ELEMENT: WaitForElementTask,
+  // Core nodes
+  START: StartTask,
+  WEBHOOK: WebhookTask,
+  SCHEDULE_TRIGGER: ScheduleTriggerTask,
+  MANUAL_TRIGGER: ManualTriggerTask,
+  
+  // Google Workspace
+  GOOGLE_SHEETS: GoogleSheetsTask,
+  GOOGLE_DOCS: GoogleSheetsTask,
+  GOOGLE_DRIVE: GoogleSheetsTask,
+  GOOGLE_CALENDAR: GoogleSheetsTask,
+  GMAIL: GmailTask,
+  
+  // Communication
+  SLACK: SlackTask,
+  DISCORD: DiscordTask,
+  TELEGRAM: DiscordTask,
+  EMAIL: GmailTask,
+  SMS: HttpRequestTask,
+  
+  // Social Media
+  TWITTER: HttpRequestTask,
+  LINKEDIN: HttpRequestTask,
+  FACEBOOK: HttpRequestTask,
+  INSTAGRAM: HttpRequestTask,
+  
+  // Development
+  GITHUB: HttpRequestTask,
+  GITLAB: HttpRequestTask,
+  JIRA: HttpRequestTask,
+  TRELLO: HttpRequestTask,
+  
+  // Data Processing
+  HTTP_REQUEST: HttpRequestTask,
+  JSON_PROCESSOR: ReadPropertyFromJsonTask,
+  CSV_PROCESSOR: HttpRequestTask,
+  TEXT_PROCESSOR: HttpRequestTask,
+  DATE_TIME: HttpRequestTask,
+  
+  // AI & ML
+  OPENAI: OpenAITask,
+  ANTHROPIC: AnthropicTask,
+  HUGGING_FACE: HuggingFaceTask,
+  
+  // Database
+  MYSQL: HttpRequestTask,
+  POSTGRESQL: HttpRequestTask,
+  MONGODB: HttpRequestTask,
+  REDIS: HttpRequestTask,
+  
+  // Cloud Storage
+  AWS_S3: HttpRequestTask,
+  DROPBOX: HttpRequestTask,
+  ONEDRIVE: HttpRequestTask,
+  
+  // E-commerce
+  SHOPIFY: HttpRequestTask,
+  STRIPE: HttpRequestTask,
+  PAYPAL: HttpRequestTask,
+  
+  // Productivity
+  NOTION: NotionTask,
+  AIRTABLE: HttpRequestTask,
+  TODOIST: HttpRequestTask,
+  ASANA: HttpRequestTask,
+  
+  // Utilities
+  DELAY: StartTask,
+  CONDITION: ConditionTask,
+  LOOP: ConditionTask,
+  MERGE: AddPropertyToJsonTask,
+  SPLIT: ReadPropertyFromJsonTask,
+  FILTER: ConditionTask,
+  SORT: HttpRequestTask,
+  
+  // Legacy
   DELIVER_VIA_WEBHOOK: DeliverViaWebHookTask,
-  EXTRACT_DATA_WITH_AI: ExtractDataWithAiTask,
   READ_PROPERTY_FROM_JSON: ReadPropertyFromJsonTask,
   ADD_PROPERTY_TO_JSON: AddPropertyToJsonTask,
-  NAVIGATE_URL: NavigateUrlTask,
-  SCROLL_TO_ELEMENT: ScrollToElementTask,
 };

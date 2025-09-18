@@ -15,17 +15,25 @@ const NodeComponent = memo((props: NodeProps) => {
   const nodeData = props.data as AppNodeData;
   const task = TaskRegistry[nodeData.type];
 
+  if (!task) {
+    return (
+      <NodeCard nodeId={props.id} isSelected={!!props.selected}>
+        <div className="p-2 text-red-500 text-sm">Unknown task type: {nodeData.type}</div>
+      </NodeCard>
+    );
+  }
+
   return (
     <NodeCard nodeId={props.id} isSelected={!!props.selected}>
       {DEV_MODE && <Badge>DEV:{props.id}</Badge>}
       <NodeHeader taskType={nodeData.type} nodeId={props.id} />
       <NodeIO>
-        {task.inputs.map((input) => (
+        {task.inputs?.map((input) => (
           <NodeInput input={input} key={input.name} nodeId={props.id} />
         ))}
       </NodeIO>
       <NodeIO>
-        {task.outputs.map((output) => (
+        {task.outputs?.map((output) => (
           <NodeOutput output={output} key={output.name} />
         ))}
       </NodeIO>

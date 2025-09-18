@@ -23,8 +23,7 @@ export default function HomeLandingPage() {
           cursorClassName="bg-primary"
         />
         <p className="text-muted-foreground text-sm md:text-xl">
-          Create, automate, and scale your web scraping projects with ease. No
-          coding required.
+          Create, automate, and scale your workflow automation with 50+ integrations. Perfect for students and professionals.
         </p>
 
         <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 space-x-0 md:space-x-4">
@@ -35,6 +34,13 @@ export default function HomeLandingPage() {
             <Link href={"/sign-in"}>Get Started</Link>
             <ChevronRightIcon className="h-4 w-4" />
           </Button>
+          <Button
+            className="w-40 h-10 rounded-xl text-sm"
+            variant={"secondary"}
+          >
+            <Link href={"/tutorial"}>View Tutorial</Link>
+          </Button>
+
         </div>
 
       </SectionWrapper>
@@ -46,8 +52,8 @@ export default function HomeLandingPage() {
         <FeaturesGradient />
       </SectionWrapper>
       <SectionWrapper
-        id="scrapingFeatures"
-        primaryTitle="Scraping"
+        id="automationFeatures"
+        primaryTitle="Automation"
         secondaryTitle="Features"
       >
         <FeaturesSection />
@@ -56,11 +62,10 @@ export default function HomeLandingPage() {
 
       <SectionWrapper className="text-center">
         <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-[#22C55E] to-green-600">
-          Start Scraping Today
+          Start Automating Today
         </h2>
         <p className="mx-auto max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">
-          Join thousands of users who are already leveraging our powerful web
-          scraping platform.
+          Join thousands of students and professionals who are already leveraging our powerful automation platform.
         </p>
         <Link
           className="w-max bg-[#22C55E] text-white hover:bg-[#22C55E]/90 transition-colors flex px-4 py-2 rounded-sm items-center"

@@ -5,7 +5,6 @@ import { AppNode, TaskParam, TaskParamType } from "@/lib/types";
 import React, { useCallback } from "react";
 import StringParam from "./params/StringParam";
 import { useReactFlow } from "@xyflow/react";
-import BrowserInstance from "./params/BrowserInstance";
 import SelectParam from "./params/SelectParam";
 import CredentialsParam from "./params/CredentialsParam";
 
@@ -37,20 +36,15 @@ function NodeParamField({
 
   switch (param.type) {
     case TaskParamType.STRING:
+    case TaskParamType.NUMBER:
+    case TaskParamType.JSON:
+    case TaskParamType.FILE:
       return (
         <StringParam
           param={param}
           value={value}
           updateNodeParamValue={updateNodeParamValue}
           disabled={disabled}
-        />
-      );
-    case TaskParamType.BROWSE_INSTANCE:
-      return (
-        <BrowserInstance
-          param={param}
-          updateNodeParamValue={updateNodeParamValue}
-          value=""
         />
       );
     case TaskParamType.SELECT:
@@ -65,6 +59,20 @@ function NodeParamField({
       return (
         <CredentialsParam
           param={param}
+          updateNodeParamValue={updateNodeParamValue}
+          value={value}
+        />
+      );
+    case TaskParamType.BOOLEAN:
+      return (
+        <SelectParam
+          param={{
+            ...param,
+            options: [
+              { label: "True", value: "true" },
+              { label: "False", value: "false" }
+            ]
+          }}
           updateNodeParamValue={updateNodeParamValue}
           value={value}
         />

@@ -1,6 +1,5 @@
 import { Node } from "@xyflow/react";
 import { LucideProps } from "lucide-react";
-import { Browser, Page } from "playwright";
 import React from "react";
 
 export enum WorkflowStatus {
@@ -9,24 +8,94 @@ export enum WorkflowStatus {
 }
 
 export enum TaskType {
-  LAUNCH_BROWSER = "LAUNCH_BROWSER",
-  PAGE_TO_HTML = "PAGE_TO_HTML",
-  EXTRACT_TEXT_FROM_ELEMENT = "EXTRACT_TEXT_FROM_ELEMENT",
-  FILL_INPUT = "FILL_INPUT",
-  CLICK_ELEMENT = "CLICK_ELEMENT",
-  WAIT_FOR_ELEMENT = "WAIT_FOR_ELEMENT",
+  // Core nodes
+  START = "START",
+  WEBHOOK = "WEBHOOK",
+  SCHEDULE_TRIGGER = "SCHEDULE_TRIGGER",
+  MANUAL_TRIGGER = "MANUAL_TRIGGER",
+  
+  // Google Workspace
+  GOOGLE_SHEETS = "GOOGLE_SHEETS",
+  GOOGLE_DOCS = "GOOGLE_DOCS",
+  GOOGLE_DRIVE = "GOOGLE_DRIVE",
+  GOOGLE_CALENDAR = "GOOGLE_CALENDAR",
+  GMAIL = "GMAIL",
+  
+  // Communication
+  SLACK = "SLACK",
+  DISCORD = "DISCORD",
+  TELEGRAM = "TELEGRAM",
+  EMAIL = "EMAIL",
+  SMS = "SMS",
+  
+  // Social Media
+  TWITTER = "TWITTER",
+  LINKEDIN = "LINKEDIN",
+  FACEBOOK = "FACEBOOK",
+  INSTAGRAM = "INSTAGRAM",
+  
+  // Development
+  GITHUB = "GITHUB",
+  GITLAB = "GITLAB",
+  JIRA = "JIRA",
+  TRELLO = "TRELLO",
+  
+  // Data Processing
+  HTTP_REQUEST = "HTTP_REQUEST",
+  JSON_PROCESSOR = "JSON_PROCESSOR",
+  CSV_PROCESSOR = "CSV_PROCESSOR",
+  TEXT_PROCESSOR = "TEXT_PROCESSOR",
+  DATE_TIME = "DATE_TIME",
+  
+  // AI & ML
+  OPENAI = "OPENAI",
+  ANTHROPIC = "ANTHROPIC",
+  HUGGING_FACE = "HUGGING_FACE",
+  
+  // Database
+  MYSQL = "MYSQL",
+  POSTGRESQL = "POSTGRESQL",
+  MONGODB = "MONGODB",
+  REDIS = "REDIS",
+  
+  // Cloud Storage
+  AWS_S3 = "AWS_S3",
+  DROPBOX = "DROPBOX",
+  ONEDRIVE = "ONEDRIVE",
+  
+  // E-commerce
+  SHOPIFY = "SHOPIFY",
+  STRIPE = "STRIPE",
+  PAYPAL = "PAYPAL",
+  
+  // Productivity
+  NOTION = "NOTION",
+  AIRTABLE = "AIRTABLE",
+  TODOIST = "TODOIST",
+  ASANA = "ASANA",
+  
+  // Utilities
+  DELAY = "DELAY",
+  CONDITION = "CONDITION",
+  LOOP = "LOOP",
+  MERGE = "MERGE",
+  SPLIT = "SPLIT",
+  FILTER = "FILTER",
+  SORT = "SORT",
+  
+  // Legacy (keeping for compatibility)
   DELIVER_VIA_WEBHOOK = "DELIVER_VIA_WEBHOOK",
-  EXTRACT_DATA_WITH_AI = "EXTRACT_DATA_WITH_AI",
   READ_PROPERTY_FROM_JSON = "READ_PROPERTY_FROM_JSON",
   ADD_PROPERTY_TO_JSON = "ADD_PROPERTY_TO_JSON",
-  NAVIGATE_URL = "NAVIGATE_URL",
-  SCROLL_TO_ELEMENT = "SCROLL_TO_ELEMENT",
 }
 export enum TaskParamType {
   STRING = "STRING",
-  BROWSE_INSTANCE = "BROWSE_INSTANCE",
   SELECT = "SELECT",
   CREDENTIAL = "CREDENTIAL",
+  NUMBER = "NUMBER",
+  BOOLEAN = "BOOLEAN",
+  JSON = "JSON",
+  FILE = "FILE",
 }
 
 export enum FlowToExecutionPlanValidationError {
@@ -100,8 +169,6 @@ export type AppNodeMissingInputs = {
 };
 
 export type Enviornment = {
-  browser?: Browser;
-  page?: Page;
   phases: {
     [key: string]: {
       inputs: Record<string, string>;
@@ -161,10 +228,6 @@ export interface GitHubScrapedData extends GitHubRepository, GitHubAnalysis {}
 export type ExecutionEnviornment<T extends WorkflowTask> = {
   getInput(name: T["inputs"][number]["name"]): string;
   setOutput(name: T["outputs"][number]["name"], value: string): void;
-  getBrowser(): Browser | undefined;
-  setBrowser(browser: Browser): void;
-  setPage(page: Page): void;
-  getPage(): Page | undefined;
   log: LogCollector;
 };
 
