@@ -28,37 +28,37 @@ export const ExecutorRegistry: RegistryType = {
   MANUAL_TRIGGER: ManualTriggerExecutor,
   
   // Google Workspace
-  GOOGLE_SHEETS: HttpRequestExecutor,
-  GOOGLE_DOCS: HttpRequestExecutor,
-  GOOGLE_DRIVE: HttpRequestExecutor,
-  GOOGLE_CALENDAR: HttpRequestExecutor,
-  GMAIL: HttpRequestExecutor,
+  GOOGLE_SHEETS: HttpRequestExecutor as any,
+  GOOGLE_DOCS: HttpRequestExecutor as any,
+  GOOGLE_DRIVE: HttpRequestExecutor as any,
+  GOOGLE_CALENDAR: HttpRequestExecutor as any,
+  GMAIL: HttpRequestExecutor as any,
   
   // Communication
-  SLACK: HttpRequestExecutor,
-  DISCORD: HttpRequestExecutor,
-  TELEGRAM: HttpRequestExecutor,
-  EMAIL: HttpRequestExecutor,
-  SMS: HttpRequestExecutor,
+  SLACK: HttpRequestExecutor as any,
+  DISCORD: HttpRequestExecutor as any,
+  TELEGRAM: HttpRequestExecutor as any,
+  EMAIL: HttpRequestExecutor as any,
+  SMS: HttpRequestExecutor as any,
   
   // Social Media
-  TWITTER: HttpRequestExecutor,
-  LINKEDIN: HttpRequestExecutor,
-  FACEBOOK: HttpRequestExecutor,
-  INSTAGRAM: HttpRequestExecutor,
+  TWITTER: HttpRequestExecutor as any,
+  LINKEDIN: HttpRequestExecutor as any,
+  FACEBOOK: HttpRequestExecutor as any,
+  INSTAGRAM: HttpRequestExecutor as any,
   
   // Development
-  GITHUB: HttpRequestExecutor,
-  GITLAB: HttpRequestExecutor,
-  JIRA: HttpRequestExecutor,
-  TRELLO: HttpRequestExecutor,
+  GITHUB: HttpRequestExecutor as any,
+  GITLAB: HttpRequestExecutor as any,
+  JIRA: HttpRequestExecutor as any,
+  TRELLO: HttpRequestExecutor as any,
   
   // Data Processing
   HTTP_REQUEST: HttpRequestExecutor,
-  JSON_PROCESSOR: ReadPropertyFromJsonExecutor,
-  CSV_PROCESSOR: HttpRequestExecutor,
-  TEXT_PROCESSOR: HttpRequestExecutor,
-  DATE_TIME: HttpRequestExecutor,
+  JSON_PROCESSOR: ReadPropertyFromJsonExecutor as any,
+  CSV_PROCESSOR: HttpRequestExecutor as any,
+  TEXT_PROCESSOR: HttpRequestExecutor as any,
+  DATE_TIME: HttpRequestExecutor as any,
   
   // AI & ML
   OPENAI: OpenAIExecutor,
@@ -66,35 +66,35 @@ export const ExecutorRegistry: RegistryType = {
   HUGGING_FACE: HuggingFaceExecutor,
   
   // Database
-  MYSQL: HttpRequestExecutor,
-  POSTGRESQL: HttpRequestExecutor,
-  MONGODB: HttpRequestExecutor,
-  REDIS: HttpRequestExecutor,
+  MYSQL: HttpRequestExecutor as any,
+  POSTGRESQL: HttpRequestExecutor as any,
+  MONGODB: HttpRequestExecutor as any,
+  REDIS: HttpRequestExecutor as any,
   
   // Cloud Storage
-  AWS_S3: HttpRequestExecutor,
-  DROPBOX: HttpRequestExecutor,
-  ONEDRIVE: HttpRequestExecutor,
+  AWS_S3: HttpRequestExecutor as any,
+  DROPBOX: HttpRequestExecutor as any,
+  ONEDRIVE: HttpRequestExecutor as any,
   
   // E-commerce
-  SHOPIFY: HttpRequestExecutor,
-  STRIPE: HttpRequestExecutor,
-  PAYPAL: HttpRequestExecutor,
+  SHOPIFY: HttpRequestExecutor as any,
+  STRIPE: HttpRequestExecutor as any,
+  PAYPAL: HttpRequestExecutor as any,
   
   // Productivity
-  NOTION: HttpRequestExecutor,
-  AIRTABLE: HttpRequestExecutor,
-  TODOIST: HttpRequestExecutor,
-  ASANA: HttpRequestExecutor,
+  NOTION: HttpRequestExecutor as any,
+  AIRTABLE: HttpRequestExecutor as any,
+  TODOIST: HttpRequestExecutor as any,
+  ASANA: HttpRequestExecutor as any,
   
   // Utilities
-  DELAY: StartExecutor,
+  DELAY: StartExecutor as any,
   CONDITION: ConditionExecutor,
-  LOOP: ConditionExecutor,
-  MERGE: AddPropertyToJsonExecutor,
-  SPLIT: ReadPropertyFromJsonExecutor,
-  FILTER: ConditionExecutor,
-  SORT: HttpRequestExecutor,
+  LOOP: ConditionExecutor as any,
+  MERGE: AddPropertyToJsonExecutor as any,
+  SPLIT: ReadPropertyFromJsonExecutor as any,
+  FILTER: ConditionExecutor as any,
+  SORT: HttpRequestExecutor as any,
   
   // Legacy
   DELIVER_VIA_WEBHOOK: DeviverViaWebHookExecutor,

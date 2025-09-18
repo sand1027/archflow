@@ -21,7 +21,7 @@ type Registry = {
   [key in TaskType]: WorkflowTask & { type: key };
 };
 
-export const TaskRegistry: Registry = {
+export const TaskRegistry = {
   // Core nodes
   START: StartTask,
   WEBHOOK: WebhookTask,

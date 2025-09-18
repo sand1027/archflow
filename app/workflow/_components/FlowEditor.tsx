@@ -135,8 +135,8 @@ function FlowEditor({ workflow }: { workflow: any }) {
         const isCompatible = 
           output.type === input.type || 
           output.type === TaskParamType.STRING || 
-          input.type === TaskParamType.STRING ||
-          (output.type === TaskParamType.BROWSER_INSTANCE && input.type === TaskParamType.BROWSER_INSTANCE);
+          (input.type as any) === TaskParamType.STRING ||
+          false; // Removed BROWSER_INSTANCE check as it doesn't exist
 
         if (!isCompatible) {
           console.log(`Type mismatch: ${output.type} -> ${input.type}`);

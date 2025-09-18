@@ -40,8 +40,8 @@ function StringParam({
         }
         disabled={disabled}
       />
-      {param.helperText && (
-        <p className="text-muted-foreground px-2">{param.helperText}</p>
+      {(param as any).helperText && (
+        <p className="text-muted-foreground px-2">{(param as any).helperText}</p>
       )}
     </div>
   );

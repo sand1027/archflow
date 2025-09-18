@@ -53,8 +53,8 @@ export default function TutorialNode({ taskType, className = "" }: TutorialNodeP
                     <span className="text-xs font-medium truncate">{input.name}</span>
                     {input.required && <Badge variant="destructive" className="text-xs px-1">!</Badge>}
                   </div>
-                  {input.helperText && (
-                    <p className="text-xs text-muted-foreground truncate">{input.helperText}</p>
+                  {(input as any).helperText && (
+                    <p className="text-xs text-muted-foreground truncate">{(input as any).helperText}</p>
                   )}
                 </div>
               </div>
@@ -78,8 +78,8 @@ export default function TutorialNode({ taskType, className = "" }: TutorialNodeP
                 <div className="flex items-center justify-end gap-1 mb-1">
                   <span className="text-xs font-medium truncate">{output.name}</span>
                 </div>
-                {output.helperText && (
-                  <p className="text-xs text-muted-foreground truncate">{output.helperText}</p>
+                {(output as any).helperText && (
+                  <p className="text-xs text-muted-foreground truncate">{(output as any).helperText}</p>
                 )}
               </div>
             </div>

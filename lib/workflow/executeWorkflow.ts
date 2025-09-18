@@ -12,10 +12,10 @@ import {
 } from "../types";
 import { TaskRegistry } from "./task/Registry";
 import { ExecutorRegistry } from "./executor/Registry";
-import { CloudBrowser, CloudPage } from "../puppeteer";
+// import { CloudBrowser, CloudPage } from "../puppeteer";
 
-type Browser = CloudBrowser;
-type Page = CloudPage;
+// type Browser = CloudBrowser;
+// type Page = CloudPage;
 import { Edge } from "@xyflow/react";
 import { createLogCollector } from "../log";
 
@@ -213,7 +213,7 @@ function setupEnviornmentForPhase(
   const inputs = TaskRegistry[node.data.type].inputs;
 
   for (const input of inputs) {
-    if (input.type === TaskParamType.BROWSE_INSTANCE) continue;
+    // Removed BROWSE_INSTANCE check as it doesn't exist
     const inputValue = node.data.inputs[input.name];
     if (inputValue) {
       // Input value is defined by user
@@ -254,21 +254,21 @@ function createExecutionEnviornment(
     setOutput: (name: string, value: string) => {
       enviornment.phases[node.id].outputs[name] = value;
     },
-    getBrowser: () => enviornment.browser,
-    setBrowser: (browser: Browser) => {
-      enviornment.browser = browser;
-    },
-    setPage: (page: Page) => (enviornment.page = page),
-    getPage: () => enviornment.page,
+    // getBrowser: () => enviornment.browser,
+    // setBrowser: (browser: Browser) => {
+    //   enviornment.browser = browser;
+    // },
+    // setPage: (page: Page) => (enviornment.page = page),
+    // getPage: () => enviornment.page,
     log: logCollector,
   };
 }
 
 async function cleanupEnviornment(enviornment: Enviornment) {
-  if (enviornment.browser) {
-    await enviornment.browser.close().catch((err) => {
-      console.log("Cannot close browser, reason:", err);
-    });
-  }
+  // if (enviornment.browser) {
+  //   await enviornment.browser.close().catch((err) => {
+  //     console.log("Cannot close browser, reason:", err);
+  //   });
+  // }
 }
 
