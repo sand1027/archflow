@@ -44,9 +44,10 @@ function TaskMenu() {
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-1">
             <TaskMenuButton taskType={TaskType.GOOGLE_SHEETS} />
-            <TaskMenuButton taskType={TaskType.GMAIL} />
+            <TaskMenuButton taskType={TaskType.GOOGLE_DOCS} />
             <TaskMenuButton taskType={TaskType.GOOGLE_DRIVE} />
             <TaskMenuButton taskType={TaskType.GOOGLE_CALENDAR} />
+            <TaskMenuButton taskType={TaskType.GMAIL} />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="communication">
@@ -79,6 +80,8 @@ function TaskMenu() {
             <TaskMenuButton taskType={TaskType.JSON_PROCESSOR} />
             <TaskMenuButton taskType={TaskType.READ_PROPERTY_FROM_JSON} />
             <TaskMenuButton taskType={TaskType.ADD_PROPERTY_TO_JSON} />
+            <TaskMenuButton taskType={TaskType.CODE} />
+            <TaskMenuButton taskType={TaskType.ITEM_LISTS} />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="utilities">
@@ -87,6 +90,9 @@ function TaskMenu() {
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-1">
             <TaskMenuButton taskType={TaskType.CONDITION} />
+            <TaskMenuButton taskType={TaskType.SWITCH} />
+            <TaskMenuButton taskType={TaskType.SET_VARIABLE} />
+            <TaskMenuButton taskType={TaskType.WAIT} />
             <TaskMenuButton taskType={TaskType.DELAY} />
             <TaskMenuButton taskType={TaskType.DELIVER_VIA_WEBHOOK} />
             <TaskMenuButton taskType={TaskType.NOTION} />

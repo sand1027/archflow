@@ -28,14 +28,20 @@ export async function HttpRequestExecutor(
     const requestOptions: RequestInit = {
       method,
       headers: {
-        'Content-Type': 'application/json',
         ...headers,
       },
       signal: AbortSignal.timeout(30000), // 30 second timeout
     };
 
-    if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
-      requestOptions.body = body;
+    // Only add Content-Type and body for methods that support it
+    if (['POST', 'PUT', 'PATCH'].includes(method)) {
+      if (body) {
+        requestOptions.headers = {
+          'Content-Type': 'application/json',
+          ...requestOptions.headers,
+        };
+        requestOptions.body = body;
+      }
     }
 
     enviornment.log.info(`Making ${method} request to ${url}`);

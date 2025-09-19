@@ -67,9 +67,10 @@ async function UserCredentials() {
   return (
     <div className="flex gap-2 flex-wrap">
       {credentials.map((credential) => {
-        const createdAt = formatDistanceToNow(credential.createdAt, {
-          addSuffix: true,
-        });
+        const createdAt = formatDistanceToNow(
+          credential.createdAt ? new Date(credential.createdAt) : new Date(),
+          { addSuffix: true }
+        );
 
         return (
           <Card key={credential.id} className="w-full p-4 flex justify-between">
@@ -84,7 +85,7 @@ async function UserCredentials() {
             </div>
             <DeleteCredentialDialog
               credentialId={credential.id}
-              crendentialName={credential.name}
+              credentialName={credential.name}
             />
           </Card>
         );

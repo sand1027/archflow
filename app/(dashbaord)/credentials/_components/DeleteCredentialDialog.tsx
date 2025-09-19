@@ -20,11 +20,11 @@ import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 
 interface Props {
-  crendentialName: string;
+  credentialName: string;
   credentialId: string;
 }
 
-function DeleteCredentialDialog({ crendentialName, credentialId }: Props) {
+function DeleteCredentialDialog({ credentialName, credentialId }: Props) {
   const [confirmText, setConfirmText] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -53,7 +53,7 @@ function DeleteCredentialDialog({ crendentialName, credentialId }: Props) {
             If you delete this credential, you will not be able to recover it.
             <div className="flex flex-col py-4 gap-2">
               <p>
-                If you are sure, enter <b>{crendentialName}</b> to confirm.
+                If you are sure, enter <b>{credentialName}</b> to confirm.
               </p>
               <Input
                 value={confirmText}
@@ -68,7 +68,7 @@ function DeleteCredentialDialog({ crendentialName, credentialId }: Props) {
           </AlertDialogCancel>
           <AlertDialogAction
             disabled={
-              confirmText !== crendentialName || deleteMutation.isPending
+              confirmText !== credentialName || deleteMutation.isPending
             }
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             onClick={() => {

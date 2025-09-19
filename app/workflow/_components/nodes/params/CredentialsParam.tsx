@@ -19,8 +19,26 @@ function CredentialsParam({ param, updateNodeParamValue, value }: ParamProps) {
 
   const query = useQuery({
     queryKey: ["credentials-for-user"],
-    queryFn: () => getUserCredentials(),
+    queryFn: async () => {
+      try {
+        const result = await getUserCredentials();
+        console.log("Credentials loaded:", result);
+        return result;
+      } catch (error) {
+        console.error("Credentials query error:", error);
+        throw error;
+      }
+    },
+    retry: 3,
     refetchInterval: 10000,
+  });
+
+  console.log("Credentials query state:", {
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error?.message,
+    data: query.data,
+    dataLength: query.data?.length
   });
 
   return (
@@ -39,6 +57,21 @@ function CredentialsParam({ param, updateNodeParamValue, value }: ParamProps) {
         <SelectContent>
           <SelectGroup>
             <SelectLabel>Credentials</SelectLabel>
+            {query.isLoading && (
+              <SelectItem value="loading" disabled>
+                Loading credentials...
+              </SelectItem>
+            )}
+            {query.error && (
+              <SelectItem value="error" disabled>
+                Error: {query.error.message}
+              </SelectItem>
+            )}
+            {query.data?.length === 0 && (
+              <SelectItem value="empty" disabled>
+                No credentials found
+              </SelectItem>
+            )}
             {query.data?.map((credential) => (
               <SelectItem key={credential.id} value={credential.id}>
                 {credential.name}

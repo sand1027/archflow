@@ -68,9 +68,9 @@ function CreateCredentialDialog({ triggeredText }: { triggeredText?: string }) {
       <DialogTrigger asChild>
         <Button>{triggeredText ?? "Create credential"}</Button>
       </DialogTrigger>
-      <DialogContent className="px-0">
+      <DialogContent className="px-0 max-h-[90vh] overflow-y-auto">
         <CustomDialogHeader icon={Layers2Icon} title="Create Credential" />
-        <div className="p-6">
+        <div className="p-6 max-h-[70vh] overflow-y-auto">
           <Form {...form}>
             <form
               className="space-y-8 w-full"
@@ -127,6 +127,20 @@ function CreateCredentialDialog({ triggeredText }: { triggeredText?: string }) {
                 )}
               />
               
+              {credentialTemplates[selectedType]?.instructions && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-900 mb-2">Setup Instructions:</h4>
+                  <ol className="text-sm text-blue-800 space-y-1">
+                    {credentialTemplates[selectedType].instructions.map((instruction, index) => (
+                      <li key={index} className="flex gap-2">
+                        <span className="font-semibold">{index + 1}.</span>
+                        <span>{instruction}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+              
               {credentialTemplates[selectedType]?.fields.map((fieldTemplate) => (
                 <FormField
                   key={fieldTemplate.key}
@@ -134,7 +148,12 @@ function CreateCredentialDialog({ triggeredText }: { triggeredText?: string }) {
                   name={`credentials.${fieldTemplate.key}` as any}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{fieldTemplate.label}</FormLabel>
+                      <FormLabel>
+                        {fieldTemplate.label}
+                        {fieldTemplate.required !== false && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
+                      </FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 

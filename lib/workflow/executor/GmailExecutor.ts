@@ -23,8 +23,8 @@ export async function GmailExecutor(
     }
 
     const credentials = await getCredentialValue(credentialId, enviornment.userId);
-    if (!credentials || !credentials.email || !credentials.password) {
-      enviornment.log.error("Invalid Gmail credentials - email and app password required");
+    if (!credentials || !credentials.access_token) {
+      enviornment.log.error("Invalid Gmail credentials - access token required");
       return false;
     }
 
@@ -36,31 +36,93 @@ export async function GmailExecutor(
     }
 
     try {
-      // For Gmail API, we'd need OAuth2 setup, but for simplicity using SMTP simulation
-      enviornment.log.info(`Gmail ${action} executed successfully`);
+      const accessToken = credentials.access_token;
+      const baseUrl = 'https://gmail.googleapis.com/gmail/v1/users/me';
       
       switch (action) {
         case "send":
-          enviornment.setOutput("Message ID", `msg_${Date.now()}`);
-          enviornment.setOutput("Emails", "1");
-          enviornment.setOutput("Count", "1");
+          // Create email message
+          const emailContent = [
+            `To: ${to}`,
+            `Subject: ${subject}`,
+            '',
+            body
+          ].join('\n');
+          
+          const encodedMessage = Buffer.from(emailContent).toString('base64')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+          
+          const sendResponse = await fetch(`${baseUrl}/messages/send`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              raw: encodedMessage
+            }),
+          });
+          
+          if (!sendResponse.ok) {
+            throw new Error(`Gmail API error: ${sendResponse.statusText}`);
+          }
+          
+          const sendData = await sendResponse.json();
+          enviornment.setOutput("Message ID", sendData.id);
+          enviornment.setOutput("Thread ID", sendData.threadId);
           enviornment.log.info(`Email sent to ${to} with subject: ${subject}`);
           break;
+          
         case "read":
         case "search":
-          enviornment.setOutput("Emails", JSON.stringify([{
-            id: `msg_${Date.now()}`,
-            subject: "Sample Email",
-            from: "example@gmail.com",
-            snippet: "This is a sample email..."
-          }]));
-          enviornment.setOutput("Count", "1");
+          const query = action === "search" ? `&q=${encodeURIComponent(subject || '')}` : '';
+          const listResponse = await fetch(`${baseUrl}/messages?maxResults=10${query}`, {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          });
+          
+          if (!listResponse.ok) {
+            throw new Error(`Gmail API error: ${listResponse.statusText}`);
+          }
+          
+          const listData = await listResponse.json();
+          const messages = listData.messages || [];
+          
+          // Get details for each message
+          const emailDetails = [];
+          for (const msg of messages.slice(0, 5)) { // Limit to 5 for performance
+            const detailResponse = await fetch(`${baseUrl}/messages/${msg.id}`, {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+              },
+            });
+            
+            if (detailResponse.ok) {
+              const detail = await detailResponse.json();
+              const headers = detail.payload?.headers || [];
+              emailDetails.push({
+                id: detail.id,
+                subject: headers.find((h: any) => h.name === 'Subject')?.value || 'No Subject',
+                from: headers.find((h: any) => h.name === 'From')?.value || 'Unknown',
+                snippet: detail.snippet || ''
+              });
+            }
+          }
+          
+          enviornment.setOutput("Emails", JSON.stringify(emailDetails));
+          enviornment.setOutput("Count", String(emailDetails.length));
+          enviornment.log.info(`Found ${emailDetails.length} emails`);
           break;
+          
         default:
-          enviornment.setOutput("Message ID", `msg_${Date.now()}`);
-          enviornment.setOutput("Count", "1");
+          enviornment.log.error(`Unknown action: ${action}`);
+          return false;
       }
 
+      enviornment.log.info(`Gmail ${action} executed successfully`);
       return true;
       
     } catch (apiError: any) {
