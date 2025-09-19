@@ -1,12 +1,13 @@
 import { ExecutionEnviornment } from "@/lib/types";
 import { ReadPropertyFromJsonTask } from "../task/ReadPropertyFromJson";
+import { extractJsonPath } from "@/lib/utils/json-path";
 
 export async function ReadPropertyFromJsonExecutor(
   enviornment: ExecutionEnviornment<typeof ReadPropertyFromJsonTask>
 ): Promise<boolean> {
   try {
     let jsonData = enviornment.getInput("JSON");
-    enviornment.log.info(`JSON input received: ${jsonData}`);
+    enviornment.log.info(`JSON input received`);
     
     if (!jsonData) {
       enviornment.log.error("input -> JSON is not defined");
@@ -24,15 +25,20 @@ export async function ReadPropertyFromJsonExecutor(
     const json = JSON.parse(jsonData);
     enviornment.log.info(`Parsed JSON successfully`);
 
-    const propertValue = json[propertyName];
-    enviornment.log.info(`Property value: ${propertValue}`);
+    const propertyValue = extractJsonPath(json, propertyName);
+    enviornment.log.info(`Extracted property value using path: ${propertyName}`);
 
-    if (propertValue === undefined) {
+    if (propertyValue === undefined) {
       enviornment.log.error(`Property '${propertyName}' not found in JSON`);
       return false;
     }
 
-    enviornment.setOutput("Property Value", String(propertValue));
+    // Convert arrays and objects to JSON strings for output
+    const outputValue = typeof propertyValue === 'object' 
+      ? JSON.stringify(propertyValue) 
+      : String(propertyValue);
+    
+    enviornment.setOutput("Property Value", outputValue);
     enviornment.log.info(`Output set successfully`);
 
     return true;
