@@ -1,9 +1,8 @@
-import { ExecutionEnviornment } from "@/lib/types";
-import { GoogleSheetsTask } from "../task/GoogleSheets"; // Reusing for now
+import { ExecutionEnviornment, TaskType, WorkflowTask } from "@/lib/types";
 import { getCredentialValue } from "@/lib/credential-helper";
 
 export async function GoogleCalendarExecutor(
-  enviornment: ExecutionEnviornment<typeof GoogleSheetsTask>
+  enviornment: ExecutionEnviornment<WorkflowTask & { type: TaskType.GOOGLE_CALENDAR }>
 ): Promise<boolean> {
   try {
     const action = enviornment.getInput("Action");
