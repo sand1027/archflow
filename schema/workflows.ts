@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
-import { z } from "zod";
 import { WorkflowExecutionStatus, WorkflowExecutionTrigger, ExecutionPhaseStatus, LogLevel } from "@/lib/types";
+import {
+  createWorkflowShema,
+  createWorkflowShemaType,
+  duplicateWorkflowSchema,
+  duplicateWorkflowSchemaType,
+} from "@/lib/validation-schemas";
 
 // Workflow Schema
 export interface IWorkflow {
@@ -113,18 +118,13 @@ export const WorkflowExecution = mongoose.models.WorkflowExecution || mongoose.m
 export const ExecutionPhase = mongoose.models.ExecutionPhase || mongoose.model<IExecutionPhase>("ExecutionPhase", ExecutionPhaseSchema);
 export const ExecutionLog = mongoose.models.ExecutionLog || mongoose.model<IExecutionLog>("ExecutionLog", ExecutionLogSchema);
 
-// Workflow validation schemas
-export const createWorkflowShema = z.object({
-  name: z.string().max(50),
-  description: z.string().max(80).optional(),
-});
+// Re-export validation schemas for backward compatibility
+export {
+  createWorkflowShema,
+  duplicateWorkflowSchema,
+} from "@/lib/validation-schemas";
 
-export type createWorkflowShemaType = z.infer<typeof createWorkflowShema>;
-
-export const duplicateWorkflowSchema = z.object({
-  name: z.string().max(50),
-  description: z.string().max(80).optional(),
-  workflowId: z.string(),
-});
-
-export type duplicateWorkflowSchemaType = z.infer<typeof duplicateWorkflowSchema>;
+export type {
+  createWorkflowShemaType,
+  duplicateWorkflowSchemaType,
+} from "@/lib/validation-schemas";

@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   createWorkflowShema,
   createWorkflowShemaType,
-} from "@/schema/workflows";
+} from "@/lib/validation-schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Layers2Icon, Loader2 } from "lucide-react";

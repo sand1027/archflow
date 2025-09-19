@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import {
   duplicateWorkflowSchema,
   duplicateWorkflowSchemaType,
-} from "@/schema/workflows";
+} from "@/lib/validation-schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { CopyIcon, Layers2Icon, Loader2 } from "lucide-react";
