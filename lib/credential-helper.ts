@@ -5,7 +5,7 @@ import { Credential } from "@/schema/credentials";
 export async function getCredentialValue(credentialId: string, userId: string): Promise<Record<string, string> | null> {
   try {
     await connectDB();
-    const credential = await Credential.findOne({ _id: credentialId, userId }).lean();
+    const credential = await Credential.findOne({ _id: credentialId, userId }).lean() as any;
     
     if (!credential) {
       return null;
@@ -22,7 +22,7 @@ export async function getCredentialValue(credentialId: string, userId: string): 
 export async function getCredentialByName(name: string, userId: string): Promise<Record<string, string> | null> {
   try {
     await connectDB();
-    const credential = await Credential.findOne({ name, userId }).lean();
+    const credential = await Credential.findOne({ name, userId }).lean() as any;
     
     if (!credential) {
       return null;

@@ -138,7 +138,7 @@ export async function getWorkflowExecutions(workflowId: string) {
 
   await connectDB();
   const executions = await WorkflowExecution.find({ workflowId, userId }).sort({ createdAt: -1 }).lean();
-  return serializeForClient(executions.map(exec => ({
+  return serializeForClient(executions.map((exec: any) => ({
     ...exec,
     id: exec._id.toString(),
     _id: exec._id.toString(),
