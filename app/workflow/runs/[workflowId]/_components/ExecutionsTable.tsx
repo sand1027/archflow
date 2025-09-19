@@ -15,7 +15,7 @@ import { datesToDurationString } from "@/lib/helper";
 import { Badge } from "@/components/ui/badge";
 import ExecutionStatusIndicator from "./ExecutionStatusIndicator";
 import { WorkflowExecutionStatus, WorkflowExecutionTrigger } from "@/lib/types";
-import { IWorkflowExecution } from "@/schema/workflows";
+import { ClientWorkflowExecution } from "@/lib/client-types";
 import { Coins, CoinsIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -52,7 +52,7 @@ function ExecutionsTable({
           </TableRow>
         </TableHeader>
         <TableBody className="gap-2 h-full overflow-auto">
-          {query.data.map((execution: IWorkflowExecution & { id: string; creditsConsumed: number }) => {
+          {query.data.map((execution: ClientWorkflowExecution) => {
             const duration = datesToDurationString(
               execution.completedAt,
               execution.startedAt
