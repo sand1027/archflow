@@ -8,12 +8,26 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ArchFlow",
-  description: "Build your own workflows and automate tasks with ease",
+  title: "ArchFlow - Student-Friendly Workflow Automation",
+  description: "Build powerful automation workflows with drag-and-drop interface. 50+ integrations including Google Workspace, Slack, AI tools, and more. Perfect for students and professionals.",
   openGraph: {
-    title: "ArchFlow - Workflow Automation Platform",
-    description: "Build powerful automation workflows with drag-and-drop interface. Perfect for students and professionals.",
+    title: "ArchFlow - Student-Friendly Workflow Automation",
+    description: "Build powerful automation workflows with drag-and-drop interface. 50+ integrations including Google Workspace, Slack, AI tools, and more. Perfect for students and professionals.",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "ArchFlow - Workflow Automation Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ArchFlow - Student-Friendly Workflow Automation",
+    description: "Build powerful automation workflows with drag-and-drop interface. 50+ integrations for students and professionals.",
+    images: ["/og-image.png"],
   },
 };
 
