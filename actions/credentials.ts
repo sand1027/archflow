@@ -1,7 +1,8 @@
 "use server";
 
 import { symmetricEncrypt } from "@/lib/credential";
-import initDB, { Credential } from "@/lib/prisma";
+import connectDB from "@/lib/mongodb";
+import { Credential } from "@/schema/credentials";
 import {
   createCredentialSchema,
   createCredentialSchemaType,
@@ -12,7 +13,7 @@ import { revalidatePath } from "next/cache";
 export async function getUserCredentials() {
   const { userId } = await requireAuth();
 
-  await initDB();
+  await connectDB();
   return await Credential.find({ userId }).sort({ name: 1 }).lean();
 }
 
@@ -25,13 +26,14 @@ export async function createCredential(form: createCredentialSchemaType) {
 
   const { userId } = await requireAuth();
 
-  const encryptedValue = symmetricEncrypt(data.value);
+  const encryptedCredentials = symmetricEncrypt(JSON.stringify(data.credentials));
 
-  await initDB();
+  await connectDB();
   const result = await Credential.create({
     userId,
     name: data.name,
-    value: encryptedValue,
+    type: data.type,
+    value: encryptedCredentials,
   });
 
   if (!result) {
@@ -43,7 +45,7 @@ export async function createCredential(form: createCredentialSchemaType) {
 export async function deleteCredential(id: string) {
   const { userId } = await requireAuth();
 
-  await initDB();
+  await connectDB();
   await Credential.findOneAndDelete({ _id: id, userId });
 
   revalidatePath("/credentials");

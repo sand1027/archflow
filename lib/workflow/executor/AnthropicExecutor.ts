@@ -1,5 +1,6 @@
 import { ExecutionEnviornment } from "@/lib/types";
 import { AnthropicTask } from "../task/Anthropic";
+import { getCredentialValue } from "@/lib/credential-helper";
 
 export async function AnthropicExecutor(
   enviornment: ExecutionEnviornment<typeof AnthropicTask>
@@ -9,23 +10,61 @@ export async function AnthropicExecutor(
     const prompt = enviornment.getInput("Prompt");
     const maxTokens = enviornment.getInput("Max Tokens") || "1000";
     const temperature = enviornment.getInput("Temperature") || "1.0";
+    const credentialId = enviornment.getInput("Credentials");
 
     if (!model || !prompt) {
       enviornment.log.error("Model and Prompt are required");
       return false;
     }
 
+    if (!credentialId) {
+      enviornment.log.error("Anthropic credentials are required");
+      return false;
+    }
+
+    const credentials = await getCredentialValue(credentialId, enviornment.userId);
+    if (!credentials || !credentials.api_key) {
+      enviornment.log.error("Invalid Anthropic credentials");
+      return false;
+    }
+
     enviornment.log.info(`Making Anthropic request with model ${model}`);
     
-    const response = `Anthropic ${model} response to: ${prompt.substring(0, 50)}...`;
-    const usage = `{"input_tokens": 10, "output_tokens": 20}`;
-    
-    enviornment.setOutput("Response", response);
-    enviornment.setOutput("Usage", usage);
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": credentials.api_key,
+          "Content-Type": "application/json",
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify({
+          model: model,
+          max_tokens: parseInt(maxTokens),
+          temperature: parseFloat(temperature),
+          messages: [{ role: "user", content: prompt }]
+        }),
+      });
 
-    enviornment.log.info("Anthropic request completed successfully");
+      if (!response.ok) {
+        throw new Error(`Anthropic API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.content[0]?.text || "No response";
+      const usage = JSON.stringify(data.usage || {});
+      
+      enviornment.setOutput("Response", aiResponse);
+      enviornment.setOutput("Usage", usage);
+
+      enviornment.log.info("Anthropic request completed successfully");
+      return true;
+      
+    } catch (apiError: any) {
+      enviornment.log.error(`Anthropic API call failed: ${apiError.message}`);
+      return false;
+    }
     
-    return true;
   } catch (error: any) {
     enviornment.log.error(error.message);
     return false;

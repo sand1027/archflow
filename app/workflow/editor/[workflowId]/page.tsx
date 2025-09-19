@@ -1,4 +1,5 @@
-import initDB, { Workflow } from "@/lib/prisma";
+import connectDB from "@/lib/mongodb";
+import { Workflow } from "@/schema/workflows";
 import { serializeForClient } from "@/lib/serialize";
 import { getCurrentUser } from "@/lib/auth-utils";
 import React from "react";
@@ -22,7 +23,7 @@ async function WorkflowEditorPage({
 
   const { userId } = auth;
 
-  await initDB();
+  await connectDB();
   const workflow = await Workflow.findOne({
     _id: workflowId,
     userId,

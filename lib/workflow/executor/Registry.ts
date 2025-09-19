@@ -11,6 +11,12 @@ import { HuggingFaceExecutor } from "./HuggingFaceExecutor";
 import { DeviverViaWebHookExecutor } from "./DeliverViaWebHookExecutor";
 import { ReadPropertyFromJsonExecutor } from "./ReadPropertyFromJsonExecutor";
 import { AddPropertyToJsonExecutor } from "./AddPropertyToJsonExecutor ";
+import { SlackExecutor } from "./SlackExecutor";
+import { NotionExecutor } from "./NotionExecutor";
+import { GmailExecutor } from "./GmailExecutor";
+import { GoogleSheetsExecutor } from "./GoogleSheetsExecutor";
+import { GoogleDocsExecutor } from "./GoogleDocsExecutor";
+import { GoogleCalendarExecutor } from "./GoogleCalendarExecutor";
 
 type ExecutorFunction<T extends WorkflowTask> = (
   enviornment: ExecutionEnviornment<T>
@@ -28,14 +34,14 @@ export const ExecutorRegistry: RegistryType = {
   MANUAL_TRIGGER: ManualTriggerExecutor,
   
   // Google Workspace
-  GOOGLE_SHEETS: HttpRequestExecutor as any,
-  GOOGLE_DOCS: HttpRequestExecutor as any,
+  GOOGLE_SHEETS: GoogleSheetsExecutor,
+  GOOGLE_DOCS: GoogleDocsExecutor,
   GOOGLE_DRIVE: HttpRequestExecutor as any,
-  GOOGLE_CALENDAR: HttpRequestExecutor as any,
-  GMAIL: HttpRequestExecutor as any,
+  GOOGLE_CALENDAR: GoogleCalendarExecutor,
+  GMAIL: GmailExecutor,
   
   // Communication
-  SLACK: HttpRequestExecutor as any,
+  SLACK: SlackExecutor,
   DISCORD: HttpRequestExecutor as any,
   TELEGRAM: HttpRequestExecutor as any,
   EMAIL: HttpRequestExecutor as any,
@@ -82,7 +88,7 @@ export const ExecutorRegistry: RegistryType = {
   PAYPAL: HttpRequestExecutor as any,
   
   // Productivity
-  NOTION: HttpRequestExecutor as any,
+  NOTION: NotionExecutor,
   AIRTABLE: HttpRequestExecutor as any,
   TODOIST: HttpRequestExecutor as any,
   ASANA: HttpRequestExecutor as any,

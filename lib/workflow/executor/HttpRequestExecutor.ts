@@ -31,6 +31,7 @@ export async function HttpRequestExecutor(
         'Content-Type': 'application/json',
         ...headers,
       },
+      signal: AbortSignal.timeout(30000), // 30 second timeout
     };
 
     if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
