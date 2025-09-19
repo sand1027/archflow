@@ -1,4 +1,17 @@
-export const credentialTemplates = {
+type CredentialTemplate = {
+  label: string;
+  description?: string;
+  fields: Array<{
+    key: string;
+    label: string;
+    type: string;
+    placeholder: string;
+    required?: boolean;
+  }>;
+  instructions?: string[];
+};
+
+export const credentialTemplates: Record<string, CredentialTemplate> = {
   GMAIL: {
     label: "Gmail",
     fields: [
@@ -37,11 +50,32 @@ export const credentialTemplates = {
       { key: "token", label: "Personal Access Token", type: "password", placeholder: "ghp_your-github-token" }
     ]
   },
-  GOOGLE_SHEETS: {
-    label: "Google Sheets",
+  GOOGLE_OAUTH: {
+    label: "Google OAuth2",
+    description: "Connect to Google services (Sheets, Docs, Drive, Calendar, Gmail)",
     fields: [
-      { key: "client_id", label: "Client ID", type: "text", placeholder: "your-google-client-id" },
-      { key: "client_secret", label: "Client Secret", type: "password", placeholder: "your-google-client-secret" }
+      { key: "access_token", label: "Access Token", type: "password", placeholder: "ya29.your-access-token", required: true },
+      { key: "refresh_token", label: "Refresh Token (Optional)", type: "password", placeholder: "1//your-refresh-token", required: false },
+      { key: "client_id", label: "Client ID (Optional)", type: "text", placeholder: "your-google-client-id", required: false },
+      { key: "client_secret", label: "Client Secret (Optional)", type: "password", placeholder: "your-google-client-secret", required: false }
+    ],
+    instructions: [
+      "1. Go to Google OAuth Playground: https://developers.google.com/oauthplayground/",
+      "2. In Step 1, select these scopes:",
+      "   • https://www.googleapis.com/auth/spreadsheets (for Sheets)",
+      "   • https://www.googleapis.com/auth/documents (for Docs)",
+      "   • https://www.googleapis.com/auth/drive (for Drive)",
+      "   • https://www.googleapis.com/auth/calendar (for Calendar)",
+      "   • https://www.googleapis.com/auth/gmail.modify (for Gmail)",
+      "3. Click 'Authorize APIs' and sign in with your Google account",
+      "4. Click 'Exchange authorization code for tokens'",
+      "5. Copy the 'Access token' and paste it above"
+    ]
+  },
+  GOOGLE_SHEETS: {
+    label: "Google Sheets (Legacy)",
+    fields: [
+      { key: "access_token", label: "Access Token", type: "password", placeholder: "ya29.your-access-token" }
     ]
   },
   ANTHROPIC: {

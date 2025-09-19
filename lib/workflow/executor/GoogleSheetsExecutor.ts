@@ -9,7 +9,7 @@ export async function GoogleSheetsExecutor(
     const action = enviornment.getInput("Action");
     const spreadsheetId = enviornment.getInput("Spreadsheet ID");
     const range = enviornment.getInput("Range") || "A1";
-    const values = enviornment.getInput("Values");
+    const values = enviornment.getInput("Data");
     const credentialId = enviornment.getInput("Credentials");
 
     if (!action || !spreadsheetId) {
@@ -23,41 +23,120 @@ export async function GoogleSheetsExecutor(
     }
 
     const credentials = await getCredentialValue(credentialId, enviornment.userId);
-    if (!credentials || !credentials.client_id || !credentials.client_secret) {
-      enviornment.log.error("Invalid Google Sheets credentials - client_id and client_secret required");
+    if (!credentials || !credentials.access_token) {
+      enviornment.log.error("Invalid Google Sheets credentials - access token required");
       return false;
     }
 
     enviornment.log.info(`Executing Google Sheets ${action} on ${spreadsheetId}`);
     
     try {
-      // For Google Sheets API, we'd need OAuth2 setup
-      // For now, simulating the response
-      enviornment.log.info(`Google Sheets ${action} executed successfully`);
+      const accessToken = credentials.access_token;
+      if (!accessToken) {
+        enviornment.log.error("Access token not found in credentials");
+        return false;
+      }
+
+      const baseUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`;
       
       switch (action) {
         case "read":
-          enviornment.setOutput("Values", JSON.stringify([
-            ["Name", "Email", "Status"],
-            ["John Doe", "john@example.com", "Active"],
-            ["Jane Smith", "jane@example.com", "Inactive"]
-          ]));
-          enviornment.setOutput("Range", range);
+          const readResponse = await fetch(`${baseUrl}/values/${range}`, {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (!readResponse.ok) {
+            throw new Error(`Google Sheets API error: ${readResponse.statusText}`);
+          }
+          
+          const readData = await readResponse.json();
+          enviornment.setOutput("Values", JSON.stringify(readData.values || []));
+          enviornment.setOutput("Range", readData.range || range);
+          enviornment.log.info(`Read ${readData.values?.length || 0} rows from ${range}`);
           break;
+          
         case "write":
         case "append":
-          enviornment.setOutput("Updated Range", `${range}:${range}`);
-          enviornment.setOutput("Updated Rows", "1");
-          enviornment.log.info(`Data written to range ${range}`);
+          if (!values) {
+            enviornment.log.error("Data is required for write/append operations");
+            return false;
+          }
+          
+          enviornment.log.info(`Raw values received: ${values}`);
+          
+          let parsedValues;
+          try {
+            parsedValues = JSON.parse(values);
+            enviornment.log.info(`Parsed values: ${JSON.stringify(parsedValues)}`);
+          } catch {
+            // If not JSON, treat as single value
+            parsedValues = [[values]];
+            enviornment.log.info(`Treating as single value: ${JSON.stringify(parsedValues)}`);
+          }
+          
+          // Validate data format
+          if (!Array.isArray(parsedValues)) {
+            enviornment.log.error("Values must be an array");
+            return false;
+          }
+          
+          const writeUrl = action === "append" 
+            ? `${baseUrl}/values/${range}:append?valueInputOption=RAW`
+            : `${baseUrl}/values/${range}?valueInputOption=RAW`;
+            
+          enviornment.log.info(`Making request to: ${writeUrl}`);
+          enviornment.log.info(`Request body: ${JSON.stringify({ values: parsedValues })}`);
+            
+          const writeResponse = await fetch(writeUrl, {
+            method: action === "append" ? 'POST' : 'PUT',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              values: parsedValues
+            }),
+          });
+          
+          if (!writeResponse.ok) {
+            const errorText = await writeResponse.text();
+            enviornment.log.error(`API Response: ${errorText}`);
+            throw new Error(`Google Sheets API error: ${writeResponse.statusText}`);
+          }
+          
+          const writeData = await writeResponse.json();
+          enviornment.setOutput("Updated Range", writeData.updatedRange || range);
+          enviornment.setOutput("Updated Rows", String(writeData.updatedRows || 0));
+          enviornment.log.info(`${action} completed: ${writeData.updatedRows || 0} rows updated`);
           break;
+          
         case "clear":
+          const clearResponse = await fetch(`${baseUrl}/values/${range}:clear`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (!clearResponse.ok) {
+            throw new Error(`Google Sheets API error: ${clearResponse.statusText}`);
+          }
+          
           enviornment.setOutput("Cleared Range", range);
+          enviornment.log.info(`Cleared range ${range}`);
           break;
+          
         default:
-          enviornment.setOutput("Result", "Operation completed");
+          enviornment.log.error(`Unknown action: ${action}`);
+          return false;
       }
 
       enviornment.setOutput("Spreadsheet ID", spreadsheetId);
+      enviornment.log.info(`Google Sheets ${action} executed successfully`);
       return true;
       
     } catch (apiError: any) {

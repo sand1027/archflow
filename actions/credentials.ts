@@ -11,10 +11,22 @@ import { requireAuth } from "@/lib/auth-utils";
 import { revalidatePath } from "next/cache";
 
 export async function getUserCredentials() {
-  const { userId } = await requireAuth();
-
-  await connectDB();
-  return await Credential.find({ userId }).sort({ name: 1 }).lean();
+  try {
+    const { userId } = await requireAuth();
+    
+    await connectDB();
+    const credentials = await Credential.find({ userId }).sort({ name: 1 }).lean();
+    
+    return credentials.map(cred => ({
+      id: cred._id.toString(),
+      name: cred.name,
+      type: cred.type,
+      createdAt: cred.createdAt
+    }));
+  } catch (error) {
+    console.error("getUserCredentials error:", error);
+    return [];
+  }
 }
 
 export async function createCredential(form: createCredentialSchemaType) {
