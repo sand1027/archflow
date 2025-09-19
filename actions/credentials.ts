@@ -17,7 +17,7 @@ export async function getUserCredentials() {
     await connectDB();
     const credentials = await Credential.find({ userId }).sort({ name: 1 }).lean();
     
-    return credentials.map(cred => ({
+    return credentials.map((cred: any) => ({
       id: cred._id.toString(),
       name: cred.name,
       type: cred.type,
