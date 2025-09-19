@@ -1,6 +1,7 @@
 "use server";
 
-import initDB, { Workflow, WorkflowExecution, ExecutionPhase } from "@/lib/prisma";
+import connectDB from "@/lib/mongodb";
+import { Workflow, WorkflowExecution, ExecutionPhase } from "@/schema/workflows";
 import {
   ExecutionPhaseStatus,
   WorkflowExecutionPlan,
@@ -25,7 +26,7 @@ export async function runWorkflow(form: {
     throw new Error("workflowId is required");
   }
 
-  await initDB();
+  await connectDB();
   const workflow = await Workflow.findOne({ _id: workflowId, userId });
 
   if (!workflow) {
@@ -64,7 +65,7 @@ export async function runWorkflow(form: {
     userId,
     status: WorkflowExecutionStatus.PENDING,
     startedAt: new Date(),
-    trigger: WorkflowExecutionTrigger.MANUAl,
+    trigger: WorkflowExecutionTrigger.MANUAL,
     definition: workflowDefinition,
   });
 

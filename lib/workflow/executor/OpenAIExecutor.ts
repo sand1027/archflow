@@ -1,5 +1,6 @@
 import { ExecutionEnviornment } from "@/lib/types";
 import { OpenAITask } from "../task/OpenAI";
+import { getCredentialValue } from "@/lib/credential-helper";
 
 export async function OpenAIExecutor(
   enviornment: ExecutionEnviornment<typeof OpenAITask>
@@ -10,44 +11,62 @@ export async function OpenAIExecutor(
     const prompt = enviornment.getInput("Prompt");
     const maxTokens = enviornment.getInput("Max Tokens") || "1000";
     const temperature = enviornment.getInput("Temperature") || "1.0";
+    const credentialId = enviornment.getInput("Credentials");
 
     if (!action || !model || !prompt) {
       enviornment.log.error("Action, Model, and Prompt are required");
       return false;
     }
 
-    // This would require OpenAI API key from credentials
-    // For now, we'll simulate the response
-    enviornment.log.info(`Making OpenAI ${action} request with model ${model}`);
-    
-    let response = "";
-    let usage = "";
-    
-    switch (action) {
-      case "chat":
-        response = `AI Response to: ${prompt.substring(0, 50)}...`;
-        usage = `{"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}`;
-        break;
-      case "completion":
-        response = `Completion for: ${prompt.substring(0, 50)}...`;
-        usage = `{"prompt_tokens": 8, "completion_tokens": 15, "total_tokens": 23}`;
-        break;
-      case "image":
-        response = "https://example.com/generated-image.png";
-        usage = `{"images_generated": 1}`;
-        break;
-      default:
-        response = `${action} response for: ${prompt.substring(0, 50)}...`;
-        usage = `{"tokens_used": 25}`;
+    if (!credentialId) {
+      enviornment.log.error("OpenAI credentials are required");
+      return false;
     }
 
-    enviornment.setOutput("Response", response);
-    enviornment.setOutput("Usage", usage);
-    enviornment.setOutput("Model Used", model);
+    // Get credentials from database
+    const credentials = await getCredentialValue(credentialId, enviornment.userId);
+    if (!credentials || !credentials.api_key) {
+      enviornment.log.error("Invalid OpenAI credentials");
+      return false;
+    }
 
-    enviornment.log.info("OpenAI request completed successfully");
+    enviornment.log.info(`Making OpenAI ${action} request with model ${model}`);
     
-    return true;
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${credentials.api_key}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: parseInt(maxTokens),
+          temperature: parseFloat(temperature),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.choices[0]?.message?.content || "No response";
+      const usage = JSON.stringify(data.usage || {});
+
+      enviornment.setOutput("Response", aiResponse);
+      enviornment.setOutput("Usage", usage);
+      enviornment.setOutput("Model Used", model);
+
+      enviornment.log.info("OpenAI request completed successfully");
+      return true;
+      
+    } catch (apiError: any) {
+      enviornment.log.error(`OpenAI API call failed: ${apiError.message}`);
+      return false;
+    }
+    
   } catch (error: any) {
     enviornment.log.error(error.message);
     return false;

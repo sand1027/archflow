@@ -118,7 +118,7 @@ export enum ExecutionPhaseStatus {
 }
 
 export enum WorkflowExecutionTrigger {
-  MANUAl = "MANUAL",
+  MANUAL = "MANUAL",
   CRON = "CRON",
 }
 
@@ -229,6 +229,7 @@ export type ExecutionEnviornment<T extends WorkflowTask> = {
   getInput(name: T["inputs"][number]["name"]): string;
   setOutput(name: T["outputs"][number]["name"], value: string): void;
   log: LogCollector;
+  userId: string;
 };
 
 export type Period = {

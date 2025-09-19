@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import "server-only";
-import initDB, { WorkflowExecution, Workflow, ExecutionPhase, ExecutionLog } from "../prisma";
+import connectDB from "../mongodb";
+import { WorkflowExecution, Workflow, ExecutionPhase, ExecutionLog } from "../../schema/workflows";
 import {
   AppNode,
   Enviornment,
@@ -20,19 +21,26 @@ import { Edge } from "@xyflow/react";
 import { createLogCollector } from "../log";
 
 export async function executeWorkflow(executionId: string, nextRunAt?: Date) {
-  await initDB();
+  console.log(`Starting workflow execution: ${executionId}`);
+  
+  await connectDB();
   const execution = await WorkflowExecution.findById(executionId);
   if (!execution) {
     throw new Error("Execution not found");
   }
+  console.log(`Found execution for workflow: ${execution.workflowId}`);
 
   const workflow = await Workflow.findById(execution.workflowId);
   if (!workflow) {
     throw new Error("Workflow not found");
   }
+  console.log(`Found workflow: ${workflow.name}`);
 
   const phases = await ExecutionPhase.find({ workflowExecutionId: executionId }).sort({ number: 1 });
+  console.log(`Found ${phases.length} phases to execute`);
+  
   const edges = JSON.parse(execution.definition).edges as Edge[];
+  console.log(`Found ${edges.length} edges`);
 
   const enviornment = { phases: {} };
   await initializeWorkflowExecution(
@@ -40,23 +48,34 @@ export async function executeWorkflow(executionId: string, nextRunAt?: Date) {
     execution.workflowId.toString(),
     nextRunAt
   );
+  console.log(`Initialized workflow execution`);
+  
   await initializePhaseStatues(phases);
+  console.log(`Initialized phase statuses`);
 
   let executionFailed = false;
 
-  for (const phase of phases) {
+  for (let i = 0; i < phases.length; i++) {
+    const phase = phases[i];
+    console.log(`Executing phase ${i + 1}/${phases.length}: ${phase.name}`);
+    
     const phaseExecution = await executeWorkflowPhase(
       phase,
       enviornment,
       edges,
       execution.userId
     );
+    
+    console.log(`Phase ${phase.name} completed with success: ${phaseExecution.success}`);
+    
     if (!phaseExecution.success) {
       executionFailed = true;
       break;
     }
   }
 
+  console.log(`Finalizing workflow execution. Failed: ${executionFailed}`);
+  
   await finalizeWorkflowExecution(
     executionId,
     execution.workflowId.toString(),
@@ -64,6 +83,7 @@ export async function executeWorkflow(executionId: string, nextRunAt?: Date) {
   );
   await cleanupEnviornment(enviornment);
 
+  console.log(`Workflow execution completed: ${executionId}`);
   revalidatePath(`/worflow/runs`);
 }
 
@@ -143,7 +163,7 @@ async function executeWorkflowPhase(
     inputs: JSON.stringify(enviornment.phases[node.id].inputs),
   });
 
-  const success = await executePhase(phase, node, enviornment, logCollector);
+  const success = await executePhase(phase, node, enviornment, logCollector, userId);
   const outputs = enviornment.phases[node.id].outputs;
   await finalizePhase(
     phase._id.toString(),
@@ -187,7 +207,8 @@ async function executePhase(
   phase: any,
   node: AppNode,
   enviornment: Enviornment,
-  logCollector: LogCollector
+  logCollector: LogCollector,
+  userId: string
 ): Promise<boolean> {
   const runFc = ExecutorRegistry[node.data.type];
   if (!runFc) {
@@ -196,7 +217,7 @@ async function executePhase(
   }
 
   const executionEnviornment: ExecutionEnviornment<any> =
-    createExecutionEnviornment(node, enviornment, logCollector);
+    createExecutionEnviornment(node, enviornment, logCollector, userId);
 
   return await runFc(executionEnviornment);
 }
@@ -233,11 +254,13 @@ function setupEnviornmentForPhase(
         " node.id: ",
         node.id
       );
+      // Skip this input if no connection found
+      continue;
     }
 
     const outputValue =
-      enviornment.phases[connectedEdge!.source].outputs[
-        connectedEdge!.sourceHandle!
+      enviornment.phases[connectedEdge.source].outputs[
+        connectedEdge.sourceHandle!
       ];
 
     enviornment.phases[node.id].inputs[input.name] = outputValue;
@@ -247,20 +270,16 @@ function setupEnviornmentForPhase(
 function createExecutionEnviornment(
   node: AppNode,
   enviornment: Enviornment,
-  logCollector: LogCollector
+  logCollector: LogCollector,
+  userId: string
 ): ExecutionEnviornment<any> {
   return {
     getInput: (name: string) => enviornment.phases[node.id]?.inputs[name],
     setOutput: (name: string, value: string) => {
       enviornment.phases[node.id].outputs[name] = value;
     },
-    // getBrowser: () => enviornment.browser,
-    // setBrowser: (browser: Browser) => {
-    //   enviornment.browser = browser;
-    // },
-    // setPage: (page: Page) => (enviornment.page = page),
-    // getPage: () => enviornment.page,
     log: logCollector,
+    userId: userId,
   };
 }
 
