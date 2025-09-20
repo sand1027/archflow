@@ -8,7 +8,9 @@ export async function GoogleSheetsExecutor(
   try {
     const action = enviornment.getInput("Action");
     const spreadsheetId = enviornment.getInput("Spreadsheet ID");
-    const range = enviornment.getInput("Range") || "A1";
+    const sheetName = enviornment.getInput("Sheet Name");
+    const rangeInput = enviornment.getInput("Range");
+    const range = sheetName ? `${sheetName}!${rangeInput || 'A1:Z100'}` : (rangeInput || "A1:Z100");
     const values = enviornment.getInput("Data");
     const credentialId = enviornment.getInput("Credentials");
 
@@ -41,7 +43,13 @@ export async function GoogleSheetsExecutor(
       
       switch (action) {
         case "read":
-          const readResponse = await fetch(`${baseUrl}/values/${range}`, {
+          const encodedRange = encodeURIComponent(range);
+          const apiUrl = `${baseUrl}/values/${encodedRange}`;
+          enviornment.log.info(`Making API request to: ${apiUrl}`);
+          enviornment.log.info(`Using range: ${range}`);
+          enviornment.log.info(`Encoded range: ${encodedRange}`);
+          
+          const readResponse = await fetch(apiUrl, {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
@@ -49,11 +57,35 @@ export async function GoogleSheetsExecutor(
           });
           
           if (!readResponse.ok) {
+            // If sheet name fails, try without it
+            if (sheetName && readResponse.status === 400) {
+              enviornment.log.info(`Sheet '${sheetName}' not found, trying default range`);
+              const fallbackRange = rangeInput || "A1:Z100";
+              const fallbackUrl = `${baseUrl}/values/${encodeURIComponent(fallbackRange)}`;
+              
+              const fallbackResponse = await fetch(fallbackUrl, {
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json',
+                },
+              });
+              
+              if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                enviornment.setOutput("Data", JSON.stringify(fallbackData.values || []));
+                enviornment.setOutput("Range", fallbackData.range || fallbackRange);
+                enviornment.log.info(`Read ${fallbackData.values?.length || 0} rows from default sheet`);
+                break;
+              }
+            }
+            
+            const errorText = await readResponse.text();
+            enviornment.log.error(`API Error Response: ${errorText}`);
             throw new Error(`Google Sheets API error: ${readResponse.statusText}`);
           }
           
           const readData = await readResponse.json();
-          enviornment.setOutput("Values", JSON.stringify(readData.values || []));
+          enviornment.setOutput("Data", JSON.stringify(readData.values || []));
           enviornment.setOutput("Range", readData.range || range);
           enviornment.log.info(`Read ${readData.values?.length || 0} rows from ${range}`);
           break;

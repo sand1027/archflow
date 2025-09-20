@@ -4,56 +4,71 @@ import { LucideProps, CalendarIcon } from "lucide-react";
 export const GoogleCalendarTask = {
   type: TaskType.GOOGLE_CALENDAR,
   label: "Google Calendar",
-  icon: (props: LucideProps) => <CalendarIcon {...props} className="stroke-red-600" />,
+  icon: (props: LucideProps) => <CalendarIcon {...props} className="stroke-blue-600" />,
   isEntryPoint: false,
   inputs: [
     {
       name: "Action",
       type: TaskParamType.SELECT,
       required: true,
+      hideHandle: false,
       options: [
         { label: "Create Event", value: "create_event" },
         { label: "List Events", value: "list_events" },
         { label: "Update Event", value: "update_event" },
         { label: "Delete Event", value: "delete_event" },
       ],
-      helperText: "Choose the action to perform",
+      helperText: "Choose the calendar action to perform",
     },
     {
       name: "Event ID",
       type: TaskParamType.STRING,
       required: false,
-      helperText: "Event ID (required for update/delete)",
+      hideHandle: false,
+      helperText: "Event ID (required for update/delete operations)",
     },
     {
       name: "Title",
       type: TaskParamType.STRING,
       required: false,
+      hideHandle: false,
       helperText: "Event title/summary",
     },
     {
       name: "Start Time",
       type: TaskParamType.STRING,
       required: false,
-      helperText: "Start time (ISO format: 2024-01-15T10:00:00Z)",
+      hideHandle: false,
+      helperText: "Start time in ISO format (e.g., 2025-09-25T09:00:00)",
     },
     {
       name: "End Time",
       type: TaskParamType.STRING,
       required: false,
-      helperText: "End time (ISO format: 2024-01-15T11:00:00Z)",
+      hideHandle: false,
+      helperText: "End time in ISO format (e.g., 2025-09-25T10:00:00)",
     },
     {
       name: "Description",
-      type: TaskParamType.STRING,
+      type: TaskParamType.TEXTAREA,
       required: false,
-      helperText: "Event description",
+      hideHandle: false,
+      helperText: "Event description or notes",
+    },
+
+    {
+      name: "Data",
+      type: TaskParamType.JSON,
+      required: false,
+      hideHandle: false,
+      helperText: "Data from Google Sheets (connect from Google Sheets Data output)",
     },
     {
       name: "Credentials",
       type: TaskParamType.CREDENTIAL,
       required: true,
-      helperText: "Google OAuth credentials",
+      hideHandle: true,
+      helperText: "Google OAuth2 credentials with Calendar access",
     },
   ],
   outputs: [
@@ -67,7 +82,7 @@ export const GoogleCalendarTask = {
     },
     {
       name: "Events",
-      type: TaskParamType.STRING,
+      type: TaskParamType.JSON,
     },
     {
       name: "Count",
