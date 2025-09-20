@@ -1,74 +1,22 @@
-import { ExecutionEnviornment } from "@/lib/types";
-import { OpenAITask } from "../task/OpenAI";
-import { getCredentialValue } from "@/lib/credential-helper";
+import { ExecutionEnviornment, TaskType, WorkflowTask } from "@/lib/types";
+import { ChatCompletionExecutor } from "./OpenAI";
 
 export async function OpenAIExecutor(
-  enviornment: ExecutionEnviornment<typeof OpenAITask>
+  enviornment: ExecutionEnviornment<WorkflowTask & { type: TaskType.OPENAI }>
 ): Promise<boolean> {
-  try {
-    const action = enviornment.getInput("Action");
-    const model = enviornment.getInput("Model");
-    const prompt = enviornment.getInput("Prompt");
-    const maxTokens = enviornment.getInput("Max Tokens") || "1000";
-    const temperature = enviornment.getInput("Temperature") || "1.0";
-    const credentialId = enviornment.getInput("Credentials");
+  const action = enviornment.getInput("Action");
 
-    if (!action || !model || !prompt) {
-      enviornment.log.error("Action, Model, and Prompt are required");
-      return false;
-    }
-
-    if (!credentialId) {
-      enviornment.log.error("OpenAI credentials are required");
-      return false;
-    }
-
-    // Get credentials from database
-    const credentials = await getCredentialValue(credentialId, enviornment.userId);
-    if (!credentials || !credentials.api_key) {
-      enviornment.log.error("Invalid OpenAI credentials");
-      return false;
-    }
-
-    enviornment.log.info(`Making OpenAI ${action} request with model ${model}`);
-    
-    try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${credentials.api_key}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: parseInt(maxTokens),
-          temperature: parseFloat(temperature),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const aiResponse = data.choices[0]?.message?.content || "No response";
-      const usage = JSON.stringify(data.usage || {});
-
-      enviornment.setOutput("Response", aiResponse);
-      enviornment.setOutput("Usage", usage);
-      enviornment.setOutput("Model Used", model);
-
-      enviornment.log.info("OpenAI request completed successfully");
-      return true;
-      
-    } catch (apiError: any) {
-      enviornment.log.error(`OpenAI API call failed: ${apiError.message}`);
-      return false;
-    }
-    
-  } catch (error: any) {
-    enviornment.log.error(error.message);
+  if (!action) {
+    enviornment.log.error("Action is required");
     return false;
+  }
+
+  switch (action) {
+    case "chat_completion":
+    case "text_completion":
+      return await ChatCompletionExecutor(enviornment as any);
+    default:
+      enviornment.log.error(`Unknown action: ${action}`);
+      return false;
   }
 }
