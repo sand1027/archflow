@@ -1,63 +1,9 @@
-import { ExecutionEnviornment } from "@/lib/types";
-import { HttpRequestTask } from "../task/HttpRequest";
+import { ExecutionEnviornment, TaskType, WorkflowTask } from "@/lib/types";
+import { RequestExecutor } from "./HttpRequest";
 
 export async function HttpRequestExecutor(
-  enviornment: ExecutionEnviornment<typeof HttpRequestTask>
+  enviornment: ExecutionEnviornment<WorkflowTask & { type: TaskType.HTTP_REQUEST }>
 ): Promise<boolean> {
-  try {
-    const method = enviornment.getInput("Method");
-    const url = enviornment.getInput("URL");
-    const headersStr = enviornment.getInput("Headers");
-    const body = enviornment.getInput("Body");
-
-    if (!method || !url) {
-      enviornment.log.error("Method and URL are required");
-      return false;
-    }
-
-    let headers: Record<string, string> = {};
-    if (headersStr) {
-      try {
-        headers = JSON.parse(headersStr);
-      } catch (e) {
-        enviornment.log.error("Invalid headers JSON format");
-        return false;
-      }
-    }
-
-    const requestOptions: RequestInit = {
-      method,
-      headers: {
-        ...headers,
-      },
-      signal: AbortSignal.timeout(30000), // 30 second timeout
-    };
-
-    // Only add Content-Type and body for methods that support it
-    if (['POST', 'PUT', 'PATCH'].includes(method)) {
-      if (body) {
-        requestOptions.headers = {
-          'Content-Type': 'application/json',
-          ...requestOptions.headers,
-        };
-        requestOptions.body = body;
-      }
-    }
-
-    enviornment.log.info(`Making ${method} request to ${url}`);
-    
-    const response = await fetch(url, requestOptions);
-    const responseText = await response.text();
-    
-    enviornment.setOutput("Response Body", responseText);
-    enviornment.setOutput("Status Code", response.status.toString());
-    enviornment.setOutput("Headers", JSON.stringify(Object.fromEntries(response.headers.entries())));
-
-    enviornment.log.info(`Request completed with status ${response.status}`);
-    
-    return response.ok;
-  } catch (error: any) {
-    enviornment.log.error(error.message);
-    return false;
-  }
+  // HttpRequest only has one action - making requests
+  return await RequestExecutor(enviornment as any);
 }
