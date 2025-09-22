@@ -105,6 +105,52 @@ export const credentialTemplates: Record<string, CredentialTemplate> = {
       { key: "auth_header", label: "Auth Header", type: "text", placeholder: "Authorization" }
     ]
   },
+  MONGODB: {
+    label: "MongoDB",
+    fields: [
+      { key: "connection_string", label: "Connection String", type: "password", placeholder: "mongodb://username:password@host:port/database" }
+    ]
+  },
+  MYSQL: {
+    label: "MySQL",
+    fields: [
+      { key: "host", label: "Host", type: "text", placeholder: "localhost" },
+      { key: "port", label: "Port", type: "text", placeholder: "3306" },
+      { key: "database", label: "Database", type: "text", placeholder: "database_name" },
+      { key: "username", label: "Username", type: "text", placeholder: "username" },
+      { key: "password", label: "Password", type: "password", placeholder: "password" }
+    ]
+  },
+  POSTGRESQL: {
+    label: "PostgreSQL",
+    fields: [
+      { key: "host", label: "Host", type: "text", placeholder: "localhost" },
+      { key: "port", label: "Port", type: "text", placeholder: "5432" },
+      { key: "database", label: "Database", type: "text", placeholder: "database_name" },
+      { key: "username", label: "Username", type: "text", placeholder: "username" },
+      { key: "password", label: "Password", type: "password", placeholder: "password" }
+    ]
+  },
+  AWS_S3: {
+    label: "AWS S3",
+    fields: [
+      { key: "access_key_id", label: "Access Key ID", type: "text", placeholder: "AKIAIOSFODNN7EXAMPLE" },
+      { key: "secret_access_key", label: "Secret Access Key", type: "password", placeholder: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" },
+      { key: "region", label: "Region", type: "text", placeholder: "us-east-1" }
+    ]
+  },
+  DROPBOX: {
+    label: "Dropbox",
+    fields: [
+      { key: "access_token", label: "Access Token", type: "password", placeholder: "sl.your-dropbox-access-token" }
+    ]
+  },
+  ONEDRIVE: {
+    label: "OneDrive",
+    fields: [
+      { key: "access_token", label: "Access Token", type: "password", placeholder: "EwAIA+pvBAAUbDba3x2OMJElkwdDqYKH" }
+    ]
+  },
   CUSTOM: {
     label: "Custom",
     fields: [

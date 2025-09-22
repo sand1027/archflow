@@ -25,6 +25,8 @@ function TaskMenu() {
           "communication",
           "ai",
           "data",
+          "database",
+          "storage",
           "utilities",
         ]}
       >
@@ -82,6 +84,26 @@ function TaskMenu() {
             <TaskMenuButton taskType={TaskType.ADD_PROPERTY_TO_JSON} />
             <TaskMenuButton taskType={TaskType.CODE} />
             <TaskMenuButton taskType={TaskType.ITEM_LISTS} />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="database">
+          <AccordionTrigger className="font-bold">
+            Database
+          </AccordionTrigger>
+          <AccordionContent className="flex flex-col gap-1">
+            <TaskMenuButton taskType={TaskType.MONGODB} />
+            <TaskMenuButton taskType={TaskType.MYSQL} />
+            <TaskMenuButton taskType={TaskType.POSTGRESQL} />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="storage">
+          <AccordionTrigger className="font-bold">
+            Storage
+          </AccordionTrigger>
+          <AccordionContent className="flex flex-col gap-1">
+            <TaskMenuButton taskType={TaskType.AWS_S3} />
+            <TaskMenuButton taskType={TaskType.DROPBOX} />
+            <TaskMenuButton taskType={TaskType.ONEDRIVE} />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="utilities">

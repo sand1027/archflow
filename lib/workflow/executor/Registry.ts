@@ -23,6 +23,12 @@ import { CodeExecutor } from "./CodeExecutor";
 import { WaitExecutor } from "./WaitExecutor";
 import { SwitchExecutor } from "./SwitchExecutor";
 import { ItemListsExecutor } from "./ItemListsExecutor";
+import { MongoDBExecutor } from "./MongoDBExecutor";
+import { MySQLExecutor } from "./MySQLExecutor";
+import { PostgreSQLExecutor } from "./PostgreSQLExecutor";
+import { AWSS3Executor } from "./AWSS3Executor";
+import { DropboxExecutor } from "./DropboxExecutor";
+import { OneDriveExecutor } from "./OneDriveExecutor";
 
 type ExecutorFunction<T extends WorkflowTask> = (
   enviornment: ExecutionEnviornment<T>
@@ -78,15 +84,15 @@ export const ExecutorRegistry: RegistryType = {
   HUGGING_FACE: HuggingFaceExecutor,
   
   // Database
-  MYSQL: HttpRequestExecutor as any,
-  POSTGRESQL: HttpRequestExecutor as any,
-  MONGODB: HttpRequestExecutor as any,
+  MONGODB: MongoDBExecutor,
+  MYSQL: MySQLExecutor,
+  POSTGRESQL: PostgreSQLExecutor,
   REDIS: HttpRequestExecutor as any,
   
   // Cloud Storage
-  AWS_S3: HttpRequestExecutor as any,
-  DROPBOX: HttpRequestExecutor as any,
-  ONEDRIVE: HttpRequestExecutor as any,
+  AWS_S3: AWSS3Executor,
+  DROPBOX: DropboxExecutor,
+  ONEDRIVE: OneDriveExecutor,
   
   // E-commerce
   SHOPIFY: HttpRequestExecutor as any,
