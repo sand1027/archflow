@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { AppNode, TaskParam, TaskParamType } from "@/lib/types";
 import React, { useCallback } from "react";
 import StringParam from "./params/StringParam";
+import TextareaParam from "./params/TextareaParam";
 import { useReactFlow } from "@xyflow/react";
 import SelectParam from "./params/SelectParam";
 import CredentialsParam from "./params/CredentialsParam";
@@ -41,6 +42,15 @@ function NodeParamField({
     case TaskParamType.FILE:
       return (
         <StringParam
+          param={param}
+          value={value}
+          updateNodeParamValue={updateNodeParamValue}
+          disabled={disabled}
+        />
+      );
+    case TaskParamType.TEXTAREA:
+      return (
+        <TextareaParam
           param={param}
           value={value}
           updateNodeParamValue={updateNodeParamValue}

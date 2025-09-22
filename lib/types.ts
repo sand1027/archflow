@@ -82,6 +82,11 @@ export enum TaskType {
   SPLIT = "SPLIT",
   FILTER = "FILTER",
   SORT = "SORT",
+  SET_VARIABLE = "SET_VARIABLE",
+  CODE = "CODE",
+  WAIT = "WAIT",
+  SWITCH = "SWITCH",
+  ITEM_LISTS = "ITEM_LISTS",
   
   // Legacy (keeping for compatibility)
   DELIVER_VIA_WEBHOOK = "DELIVER_VIA_WEBHOOK",
@@ -90,6 +95,7 @@ export enum TaskType {
 }
 export enum TaskParamType {
   STRING = "STRING",
+  TEXTAREA = "TEXTAREA",
   SELECT = "SELECT",
   CREDENTIAL = "CREDENTIAL",
   NUMBER = "NUMBER",
@@ -118,7 +124,7 @@ export enum ExecutionPhaseStatus {
 }
 
 export enum WorkflowExecutionTrigger {
-  MANUAl = "MANUAL",
+  MANUAL = "MANUAL",
   CRON = "CRON",
 }
 
@@ -229,6 +235,7 @@ export type ExecutionEnviornment<T extends WorkflowTask> = {
   getInput(name: T["inputs"][number]["name"]): string;
   setOutput(name: T["outputs"][number]["name"], value: string): void;
   log: LogCollector;
+  userId: string;
 };
 
 export type Period = {

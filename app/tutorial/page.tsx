@@ -105,7 +105,7 @@ export default function TutorialPage() {
             Interactive Learning
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            WorkFlex Tutorial
+            ArchFlow Tutorial
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Master automation workflows with hands-on examples and interactive node exploration
@@ -162,7 +162,7 @@ export default function TutorialPage() {
         <div className="text-center mt-16 p-8 bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl border">
           <h2 className="text-2xl font-bold mb-4">Ready to Build Your First Workflow?</h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Start creating powerful automation workflows with WorkFlex&apos;s intuitive drag-and-drop interface
+            Start creating powerful automation workflows with ArchFlow&apos;s intuitive drag-and-drop interface
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/sign-in">

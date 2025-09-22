@@ -11,6 +11,24 @@ import { HuggingFaceExecutor } from "./HuggingFaceExecutor";
 import { DeviverViaWebHookExecutor } from "./DeliverViaWebHookExecutor";
 import { ReadPropertyFromJsonExecutor } from "./ReadPropertyFromJsonExecutor";
 import { AddPropertyToJsonExecutor } from "./AddPropertyToJsonExecutor ";
+import { SlackExecutor } from "./SlackExecutor";
+import { NotionExecutor } from "./NotionExecutor";
+import { GmailExecutor } from "./GmailExecutor";
+import { GoogleSheetsExecutor } from "./GoogleSheetsExecutor";
+import { GoogleDocsExecutor } from "./GoogleDocsExecutor";
+import { GoogleDriveExecutor } from "./GoogleDriveExecutor";
+import { GoogleCalendarExecutor } from "./GoogleCalendarExecutor";
+import { SetVariableExecutor } from "./SetVariableExecutor";
+import { CodeExecutor } from "./CodeExecutor";
+import { WaitExecutor } from "./WaitExecutor";
+import { SwitchExecutor } from "./SwitchExecutor";
+import { ItemListsExecutor } from "./ItemListsExecutor";
+import { MongoDBExecutor } from "./MongoDBExecutor";
+import { MySQLExecutor } from "./MySQLExecutor";
+import { PostgreSQLExecutor } from "./PostgreSQLExecutor";
+import { AWSS3Executor } from "./AWSS3Executor";
+import { DropboxExecutor } from "./DropboxExecutor";
+import { OneDriveExecutor } from "./OneDriveExecutor";
 
 type ExecutorFunction<T extends WorkflowTask> = (
   enviornment: ExecutionEnviornment<T>
@@ -28,14 +46,14 @@ export const ExecutorRegistry: RegistryType = {
   MANUAL_TRIGGER: ManualTriggerExecutor,
   
   // Google Workspace
-  GOOGLE_SHEETS: HttpRequestExecutor as any,
-  GOOGLE_DOCS: HttpRequestExecutor as any,
-  GOOGLE_DRIVE: HttpRequestExecutor as any,
-  GOOGLE_CALENDAR: HttpRequestExecutor as any,
-  GMAIL: HttpRequestExecutor as any,
+  GOOGLE_SHEETS: GoogleSheetsExecutor,
+  GOOGLE_DOCS: GoogleDocsExecutor,
+  GOOGLE_DRIVE: GoogleDriveExecutor,
+  GOOGLE_CALENDAR: GoogleCalendarExecutor,
+  GMAIL: GmailExecutor,
   
   // Communication
-  SLACK: HttpRequestExecutor as any,
+  SLACK: SlackExecutor,
   DISCORD: HttpRequestExecutor as any,
   TELEGRAM: HttpRequestExecutor as any,
   EMAIL: HttpRequestExecutor as any,
@@ -66,15 +84,15 @@ export const ExecutorRegistry: RegistryType = {
   HUGGING_FACE: HuggingFaceExecutor,
   
   // Database
-  MYSQL: HttpRequestExecutor as any,
-  POSTGRESQL: HttpRequestExecutor as any,
-  MONGODB: HttpRequestExecutor as any,
+  MONGODB: MongoDBExecutor,
+  MYSQL: MySQLExecutor,
+  POSTGRESQL: PostgreSQLExecutor,
   REDIS: HttpRequestExecutor as any,
   
   // Cloud Storage
-  AWS_S3: HttpRequestExecutor as any,
-  DROPBOX: HttpRequestExecutor as any,
-  ONEDRIVE: HttpRequestExecutor as any,
+  AWS_S3: AWSS3Executor,
+  DROPBOX: DropboxExecutor,
+  ONEDRIVE: OneDriveExecutor,
   
   // E-commerce
   SHOPIFY: HttpRequestExecutor as any,
@@ -82,7 +100,7 @@ export const ExecutorRegistry: RegistryType = {
   PAYPAL: HttpRequestExecutor as any,
   
   // Productivity
-  NOTION: HttpRequestExecutor as any,
+  NOTION: NotionExecutor,
   AIRTABLE: HttpRequestExecutor as any,
   TODOIST: HttpRequestExecutor as any,
   ASANA: HttpRequestExecutor as any,
@@ -95,6 +113,11 @@ export const ExecutorRegistry: RegistryType = {
   SPLIT: ReadPropertyFromJsonExecutor as any,
   FILTER: ConditionExecutor as any,
   SORT: HttpRequestExecutor as any,
+  SET_VARIABLE: SetVariableExecutor,
+  CODE: CodeExecutor,
+  WAIT: WaitExecutor,
+  SWITCH: SwitchExecutor,
+  ITEM_LISTS: ItemListsExecutor,
   
   // Legacy
   DELIVER_VIA_WEBHOOK: DeviverViaWebHookExecutor,

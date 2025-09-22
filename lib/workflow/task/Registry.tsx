@@ -4,6 +4,9 @@ import { WebhookTask } from "./Webhook";
 import { ScheduleTriggerTask } from "./ScheduleTrigger";
 import { ManualTriggerTask } from "./ManualTrigger";
 import { GoogleSheetsTask } from "./GoogleSheets";
+import { GoogleDocsTask } from "./GoogleDocs";
+import { GoogleDriveTask } from "./GoogleDrive";
+import { GoogleCalendarTask } from "./GoogleCalendar";
 import { SlackTask } from "./Slack";
 import { HttpRequestTask } from "./HttpRequest";
 import { OpenAITask } from "./OpenAI";
@@ -16,6 +19,17 @@ import { NotionTask } from "./Notion";
 import { DeliverViaWebHookTask } from "./DeliverViaWebHook";
 import { ReadPropertyFromJsonTask } from "./ReadPropertyFromJson";
 import { AddPropertyToJsonTask } from "./AddPropertyToJson";
+import { SetVariableTask } from "./SetVariable";
+import { CodeTask } from "./Code";
+import { WaitTask } from "./Wait";
+import { SwitchTask } from "./Switch";
+import { ItemListsTask } from "./ItemLists";
+import { MongoDBTask } from "./MongoDB";
+import { MySQLTask } from "./MySQL";
+import { PostgreSQLTask } from "./PostgreSQL";
+import { AWSS3Task } from "./AWSS3";
+import { DropboxTask } from "./Dropbox";
+import { OneDriveTask } from "./OneDrive";
 
 type Registry = {
   [key in TaskType]: WorkflowTask & { type: key };
@@ -30,9 +44,9 @@ export const TaskRegistry = {
   
   // Google Workspace
   GOOGLE_SHEETS: GoogleSheetsTask,
-  GOOGLE_DOCS: GoogleSheetsTask,
-  GOOGLE_DRIVE: GoogleSheetsTask,
-  GOOGLE_CALENDAR: GoogleSheetsTask,
+  GOOGLE_DOCS: GoogleDocsTask,
+  GOOGLE_DRIVE: GoogleDriveTask,
+  GOOGLE_CALENDAR: GoogleCalendarTask,
   GMAIL: GmailTask,
   
   // Communication
@@ -67,15 +81,15 @@ export const TaskRegistry = {
   HUGGING_FACE: HuggingFaceTask,
   
   // Database
-  MYSQL: HttpRequestTask,
-  POSTGRESQL: HttpRequestTask,
-  MONGODB: HttpRequestTask,
+  MONGODB: MongoDBTask,
+  MYSQL: MySQLTask,
+  POSTGRESQL: PostgreSQLTask,
   REDIS: HttpRequestTask,
   
   // Cloud Storage
-  AWS_S3: HttpRequestTask,
-  DROPBOX: HttpRequestTask,
-  ONEDRIVE: HttpRequestTask,
+  AWS_S3: AWSS3Task,
+  DROPBOX: DropboxTask,
+  ONEDRIVE: OneDriveTask,
   
   // E-commerce
   SHOPIFY: HttpRequestTask,
@@ -96,6 +110,11 @@ export const TaskRegistry = {
   SPLIT: ReadPropertyFromJsonTask,
   FILTER: ConditionTask,
   SORT: HttpRequestTask,
+  SET_VARIABLE: SetVariableTask,
+  CODE: CodeTask,
+  WAIT: WaitTask,
+  SWITCH: SwitchTask,
+  ITEM_LISTS: ItemListsTask,
   
   // Legacy
   DELIVER_VIA_WEBHOOK: DeliverViaWebHookTask,

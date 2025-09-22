@@ -18,6 +18,8 @@ const nodeCategories = {
   "Communication": [TaskType.SLACK, TaskType.DISCORD],
   "AI & ML": [TaskType.OPENAI, TaskType.ANTHROPIC, TaskType.HUGGING_FACE],
   "Data Processing": [TaskType.HTTP_REQUEST, TaskType.JSON_PROCESSOR],
+  "Database": [TaskType.MONGODB, TaskType.MYSQL, TaskType.POSTGRESQL],
+  "Storage": [TaskType.AWS_S3, TaskType.DROPBOX, TaskType.ONEDRIVE],
   "Utilities": [TaskType.CONDITION, TaskType.DELAY, TaskType.NOTION]
 };
 

@@ -54,10 +54,26 @@ export const GoogleSheetsTask = {
   outputs: [
     {
       name: "Data",
+      type: TaskParamType.JSON,
+    },
+    {
+      name: "Range",
       type: TaskParamType.STRING,
     },
     {
-      name: "Row Count",
+      name: "Spreadsheet ID",
+      type: TaskParamType.STRING,
+    },
+    {
+      name: "Updated Range",
+      type: TaskParamType.STRING,
+    },
+    {
+      name: "Updated Rows",
+      type: TaskParamType.STRING,
+    },
+    {
+      name: "Cleared Range",
       type: TaskParamType.STRING,
     },
   ],
