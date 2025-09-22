@@ -93,6 +93,7 @@ function WorkflowCard({ workflow }: { workflow: any }) {
           <WorkflowActions
             workflowName={workflow.name}
             workflowId={workflow._id.toString()}
+            workflow={workflow}
           />
         </div>
       </CardContent>
