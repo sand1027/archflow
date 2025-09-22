@@ -24,6 +24,12 @@ import { CodeTask } from "./Code";
 import { WaitTask } from "./Wait";
 import { SwitchTask } from "./Switch";
 import { ItemListsTask } from "./ItemLists";
+import { MongoDBTask } from "./MongoDB";
+import { MySQLTask } from "./MySQL";
+import { PostgreSQLTask } from "./PostgreSQL";
+import { AWSS3Task } from "./AWSS3";
+import { DropboxTask } from "./Dropbox";
+import { OneDriveTask } from "./OneDrive";
 
 type Registry = {
   [key in TaskType]: WorkflowTask & { type: key };
@@ -75,15 +81,15 @@ export const TaskRegistry = {
   HUGGING_FACE: HuggingFaceTask,
   
   // Database
-  MYSQL: HttpRequestTask,
-  POSTGRESQL: HttpRequestTask,
-  MONGODB: HttpRequestTask,
+  MONGODB: MongoDBTask,
+  MYSQL: MySQLTask,
+  POSTGRESQL: PostgreSQLTask,
   REDIS: HttpRequestTask,
   
   // Cloud Storage
-  AWS_S3: HttpRequestTask,
-  DROPBOX: HttpRequestTask,
-  ONEDRIVE: HttpRequestTask,
+  AWS_S3: AWSS3Task,
+  DROPBOX: DropboxTask,
+  ONEDRIVE: OneDriveTask,
   
   // E-commerce
   SHOPIFY: HttpRequestTask,
