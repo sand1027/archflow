@@ -9,6 +9,8 @@ import ExecuteButton from "./ExecuteButton";
 import NavigationTabs from "./NavigationTabs";
 import PublishButton from "./PublishButton";
 import UnPublishButton from "./UnPublishButton";
+import ExportButton from "./ExportButton";
+import ImportButton from "./ImportButton";
 
 interface Props {
   title: string;
@@ -16,6 +18,7 @@ interface Props {
   workflowId: string;
   hideButtons?: boolean;
   isPublished?: boolean;
+  workflow?: any;
 }
 
 function Topbar({
@@ -24,6 +27,7 @@ function Topbar({
   workflowId,
   hideButtons = false,
   isPublished = false,
+  workflow,
 }: Props) {
   const router = useRouter();
 
@@ -48,6 +52,8 @@ function Topbar({
       <div className="flex gap-1 flex-1 justify-end">
         {!hideButtons && (
           <Fragment>
+            <ImportButton />
+            {workflow && <ExportButton workflow={workflow} />}
             <ExecuteButton workflowId={workflowId} />
             {isPublished && <UnPublishButton workflowId={workflowId} />}
             {!isPublished && (

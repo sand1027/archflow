@@ -19,6 +19,7 @@ function Editor({ workflow }: { workflow: any }) {
             subtitle={workflow.name}
             workflowId={workflow._id.toString()}
             isPublished={workflow.status === WorkflowStatus.PUBLISHED}
+            workflow={workflow}
           />
           <section className="flex h-full overflow-auto">
             <TaskMenu />
