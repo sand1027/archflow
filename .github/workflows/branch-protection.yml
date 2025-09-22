@@ -1,0 +1,17 @@
+name: Branch Protection
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  protect:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
+    
+    steps:
+      - name: Block direct push to main
+        run: |
+          echo "Direct pushes to main branch are not allowed!"
+          echo "Please create a PR from dev to main instead."
+          exit 1
