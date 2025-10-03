@@ -102,6 +102,7 @@ export enum TaskParamType {
   BOOLEAN = "BOOLEAN",
   JSON = "JSON",
   FILE = "FILE",
+  DATA_VIEWER = "DATA_VIEWER",
 }
 
 export enum FlowToExecutionPlanValidationError {
