@@ -1,5 +1,5 @@
 import { ExecutionEnviornment, TaskType, WorkflowTask } from "@/lib/types";
-import { InsertExecutor, FindExecutor, UpdateExecutor, DeleteExecutor } from "./MongoDB";
+import { InsertExecutor, FindExecutor, UpdateExecutor, DeleteExecutor, AnalyticsExecutor } from "./MongoDB";
 
 export async function MongoDBExecutor(
   enviornment: ExecutionEnviornment<WorkflowTask & { type: TaskType.MONGODB }>
@@ -20,6 +20,8 @@ export async function MongoDBExecutor(
       return await UpdateExecutor(enviornment as any);
     case "delete":
       return await DeleteExecutor(enviornment as any);
+    case "analytics":
+      return await AnalyticsExecutor(enviornment as any);
     default:
       enviornment.log.error(`Unknown action: ${action}`);
       return false;

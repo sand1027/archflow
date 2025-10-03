@@ -9,4 +9,5 @@ export const ColorForHandle: Record<TaskParamType, string> = {
   BOOLEAN: "!bg-green-400",
   JSON: "!bg-purple-400",
   FILE: "!bg-orange-400",
+  DATA_VIEWER: "!bg-green-400",
 };
