@@ -4,7 +4,7 @@ export interface ICredential {
   _id?: string;
   userId: string;
   name: string;
-  type: "GMAIL" | "SLACK" | "OPENAI" | "NOTION" | "DISCORD" | "GITHUB" | "GOOGLE_OAUTH" | "GOOGLE_SHEETS" | "ANTHROPIC" | "HUGGING_FACE" | "WEBHOOK" | "HTTP" | "CUSTOM";
+  type: "GMAIL" | "SLACK" | "OPENAI" | "NOTION" | "DISCORD" | "GITHUB" | "GOOGLE_OAUTH" | "GOOGLE_SHEETS" | "ANTHROPIC" | "HUGGING_FACE" | "WEBHOOK" | "HTTP" | "CUSTOM" | "MONGODB";
   value: string; // Encrypted JSON string of key-value pairs
   createdAt: Date;
   updatedAt: Date;
@@ -22,7 +22,7 @@ const CredentialSchema = new mongoose.Schema<ICredential>({
   },
   type: {
     type: String,
-    enum: ["GMAIL", "SLACK", "OPENAI", "NOTION", "DISCORD", "GITHUB", "GOOGLE_OAUTH", "GOOGLE_SHEETS", "ANTHROPIC", "HUGGING_FACE", "WEBHOOK", "HTTP", "CUSTOM"],
+    enum: ["GMAIL", "SLACK", "OPENAI", "NOTION", "DISCORD", "GITHUB", "GOOGLE_OAUTH", "GOOGLE_SHEETS", "ANTHROPIC", "HUGGING_FACE", "WEBHOOK", "HTTP", "CUSTOM", "MONGODB"],
     required: true,
   },
   value: {

@@ -11,6 +11,7 @@ import PublishButton from "./PublishButton";
 import UnPublishButton from "./UnPublishButton";
 import ExportButton from "./ExportButton";
 import ImportButton from "./ImportButton";
+import ViewDataButton from "./ViewDataButton";
 
 interface Props {
   title: string;
@@ -52,6 +53,7 @@ function Topbar({
       <div className="flex gap-1 flex-1 justify-end">
         {!hideButtons && (
           <Fragment>
+            <ViewDataButton />
             <ImportButton />
             {workflow && <ExportButton workflow={workflow} />}
             <ExecuteButton workflowId={workflowId} />

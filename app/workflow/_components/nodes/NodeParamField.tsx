@@ -8,6 +8,7 @@ import TextareaParam from "./params/TextareaParam";
 import { useReactFlow } from "@xyflow/react";
 import SelectParam from "./params/SelectParam";
 import CredentialsParam from "./params/CredentialsParam";
+import DataViewerParam from "./params/DataViewerParam";
 
 function NodeParamField({
   param,
@@ -71,6 +72,13 @@ function NodeParamField({
           param={param}
           updateNodeParamValue={updateNodeParamValue}
           value={value}
+        />
+      );
+    case TaskParamType.DATA_VIEWER:
+      return (
+        <DataViewerParam
+          credentialId={node?.data?.inputs?.['Credentials'] || ''}
+          collection={node?.data?.inputs?.['Collection'] || ''}
         />
       );
     case TaskParamType.BOOLEAN:
