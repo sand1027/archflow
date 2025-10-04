@@ -117,6 +117,8 @@ function TaskMenu() {
               "data",
               "database",
               "storage",
+              "education",
+              "productivity",
               "utilities",
             ]}
           >
@@ -149,8 +151,8 @@ function TaskMenu() {
           <AccordionContent className="flex flex-col gap-1">
             <TaskMenuButton taskType={TaskType.SLACK} />
             <TaskMenuButton taskType={TaskType.DISCORD} />
-            <TaskMenuButton taskType={TaskType.EMAIL} />
-            <TaskMenuButton taskType={TaskType.SMS} />
+            <TaskMenuButton taskType={TaskType.MICROSOFT_TEAMS} />
+            <TaskMenuButton taskType={TaskType.WHATSAPP} />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="ai">
@@ -161,6 +163,9 @@ function TaskMenu() {
             <TaskMenuButton taskType={TaskType.OPENAI} />
             <TaskMenuButton taskType={TaskType.ANTHROPIC} />
             <TaskMenuButton taskType={TaskType.HUGGING_FACE} />
+            <TaskMenuButton taskType={TaskType.AI_WORKFLOW_BUILDER} />
+            <TaskMenuButton taskType={TaskType.SMART_NODE_SUGGESTIONS} />
+            <TaskMenuButton taskType={TaskType.AI_DATA_TRANSFORMER} />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="data">
@@ -170,8 +175,6 @@ function TaskMenu() {
           <AccordionContent className="flex flex-col gap-1">
             <TaskMenuButton taskType={TaskType.HTTP_REQUEST} />
             <TaskMenuButton taskType={TaskType.JSON_PROCESSOR} />
-            <TaskMenuButton taskType={TaskType.READ_PROPERTY_FROM_JSON} />
-            <TaskMenuButton taskType={TaskType.ADD_PROPERTY_TO_JSON} />
             <TaskMenuButton taskType={TaskType.CODE} />
             <TaskMenuButton taskType={TaskType.ITEM_LISTS} />
           </AccordionContent>
@@ -196,6 +199,26 @@ function TaskMenu() {
             <TaskMenuButton taskType={TaskType.ONEDRIVE} />
           </AccordionContent>
         </AccordionItem>
+        <AccordionItem value="education">
+          <AccordionTrigger className="font-bold">
+            Education
+          </AccordionTrigger>
+          <AccordionContent className="flex flex-col gap-1">
+            <TaskMenuButton taskType={TaskType.CANVAS_LMS} />
+            <TaskMenuButton taskType={TaskType.CITATION_GENERATOR} />
+            <TaskMenuButton taskType={TaskType.STUDY_TIMER} />
+            <TaskMenuButton taskType={TaskType.ZOOM} />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="productivity">
+          <AccordionTrigger className="font-bold">
+            Productivity
+          </AccordionTrigger>
+          <AccordionContent className="flex flex-col gap-1">
+            <TaskMenuButton taskType={TaskType.NOTION} />
+            <TaskMenuButton taskType={TaskType.ZAPIER_IMPORT} />
+          </AccordionContent>
+        </AccordionItem>
         <AccordionItem value="utilities">
           <AccordionTrigger className="font-bold">
             Utilities
@@ -205,9 +228,6 @@ function TaskMenu() {
             <TaskMenuButton taskType={TaskType.SWITCH} />
             <TaskMenuButton taskType={TaskType.SET_VARIABLE} />
             <TaskMenuButton taskType={TaskType.WAIT} />
-            <TaskMenuButton taskType={TaskType.DELAY} />
-            <TaskMenuButton taskType={TaskType.DELIVER_VIA_WEBHOOK} />
-            <TaskMenuButton taskType={TaskType.NOTION} />
           </AccordionContent>
         </AccordionItem>
           </Accordion>

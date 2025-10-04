@@ -29,6 +29,11 @@ import { PostgreSQLExecutor } from "./PostgreSQLExecutor";
 import { AWSS3Executor } from "./AWSS3Executor";
 import { DropboxExecutor } from "./DropboxExecutor";
 import { OneDriveExecutor } from "./OneDriveExecutor";
+import { MicrosoftTeamsExecutor } from "./MicrosoftTeamsExecutor";
+import { WhatsAppExecutor } from "./WhatsAppExecutor";
+import { AIWorkflowBuilderExecutor } from "./AIWorkflowBuilderExecutor";
+import { StudyTimerExecutor } from "./StudyTimerExecutor";
+import { CitationGeneratorExecutor } from "./CitationGeneratorExecutor";
 
 type ExecutorFunction<T extends WorkflowTask> = (
   enviornment: ExecutionEnviornment<T>
@@ -58,6 +63,8 @@ export const ExecutorRegistry: RegistryType = {
   TELEGRAM: HttpRequestExecutor as any,
   EMAIL: HttpRequestExecutor as any,
   SMS: HttpRequestExecutor as any,
+  MICROSOFT_TEAMS: MicrosoftTeamsExecutor,
+  WHATSAPP: WhatsAppExecutor,
   
   // Social Media
   TWITTER: HttpRequestExecutor as any,
@@ -82,6 +89,9 @@ export const ExecutorRegistry: RegistryType = {
   OPENAI: OpenAIExecutor,
   ANTHROPIC: AnthropicExecutor,
   HUGGING_FACE: HuggingFaceExecutor,
+  AI_WORKFLOW_BUILDER: AIWorkflowBuilderExecutor,
+  SMART_NODE_SUGGESTIONS: HttpRequestExecutor as any,
+  AI_DATA_TRANSFORMER: HttpRequestExecutor as any,
   
   // Database
   MONGODB: MongoDBExecutor,
@@ -104,6 +114,17 @@ export const ExecutorRegistry: RegistryType = {
   AIRTABLE: HttpRequestExecutor as any,
   TODOIST: HttpRequestExecutor as any,
   ASANA: HttpRequestExecutor as any,
+  ZAPIER_IMPORT: HttpRequestExecutor as any,
+  
+  // Education
+  CANVAS_LMS: HttpRequestExecutor as any,
+  BLACKBOARD: HttpRequestExecutor as any,
+  COURSERA: HttpRequestExecutor as any,
+  EDX: HttpRequestExecutor as any,
+  CITATION_GENERATOR: CitationGeneratorExecutor,
+  STUDY_TIMER: StudyTimerExecutor,
+  ZOOM: HttpRequestExecutor as any,
+  GOOGLE_MEET: HttpRequestExecutor as any,
   
   // Utilities
   DELAY: StartExecutor as any,
