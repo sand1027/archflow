@@ -9,11 +9,15 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Github, Chrome } from "lucide-react";
 import Logo from "@/components/Logo";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
 
-export default function SignIn() {
+function SignInContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/home';
+  
+  console.log('Sign-in page callback URL:', callbackUrl);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -23,15 +27,17 @@ export default function SignIn() {
     const checkSession = async () => {
       const session = await getSession();
       if (session) {
-        router.push("/home");
+        const redirectUrl = decodeURIComponent(callbackUrl);
+        console.log('Redirecting to:', redirectUrl);
+        router.push(redirectUrl);
       }
     };
     checkSession();
-  }, [router]);
+  }, [router, callbackUrl]);
 
   const handleOAuthSignIn = async (provider: "github" | "google") => {
     try {
-      await signIn(provider, { callbackUrl: "/home" });
+      await signIn(provider, { callbackUrl: decodeURIComponent(callbackUrl) });
     } catch (error) {
       console.error("Sign in error:", error);
     }
@@ -47,14 +53,14 @@ export default function SignIn() {
         password,
         name,
         isSignUp: isSignUp.toString(),
-        callbackUrl: "/home",
+        callbackUrl: decodeURIComponent(callbackUrl),
         redirect: false,
       });
       
       if (result?.error) {
         alert(result.error);
       } else {
-        router.push("/home");
+        router.push(decodeURIComponent(callbackUrl));
       }
     } catch (error) {
       console.error("Auth error:", error);
@@ -191,5 +197,13 @@ export default function SignIn() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SignIn() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-black"><div className="text-white">Loading...</div></div>}>
+      <SignInContent />
+    </Suspense>
   );
 }

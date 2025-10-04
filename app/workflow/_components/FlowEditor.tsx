@@ -32,14 +32,28 @@ const snapgird: [number, number] = [50, 50];
 
 const fitViewOptions = { padding: 0.3, minZoom: 0.5, maxZoom: 1.5 };
 
-function FlowEditor({ workflow }: { workflow: any }) {
+function FlowEditor({ 
+  workflow, 
+  workflowId, 
+  isReadOnly = false, 
+  isCollaborative = false 
+}: { 
+  workflow?: any;
+  workflowId?: string;
+  isReadOnly?: boolean;
+  isCollaborative?: boolean;
+}) {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const { setViewport, screenToFlowPosition, updateNodeData } = useReactFlow();
 
   useEffect(() => {
+    if (!workflow) return;
+    
     try {
-      const flow = JSON.parse(workflow.definition);
+      console.log('FlowEditor received workflow:', workflow);
+      const flow = JSON.parse(workflow.definition || '{}');
+      console.log('Parsed flow:', flow);
       if (!flow) return;
       setNodes(flow.nodes || []);
       setEdges(flow.edges || []);
@@ -48,7 +62,9 @@ function FlowEditor({ workflow }: { workflow: any }) {
       setTimeout(() => {
         setViewport({ x: 0, y: 0, zoom: 0.75 });
       }, 100);
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error parsing workflow definition:', error);
+    }
   }, [workflow, setEdges, setNodes, setViewport]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {

@@ -267,3 +267,42 @@ export type WorkflowExecutionType = Record<
     failed: number;
   }
 >;
+
+// Collaboration Types
+export interface CollaborationUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  cursor?: { x: number; y: number };
+  selection?: string[];
+  isOnline: boolean;
+  lastSeen: Date;
+}
+
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  message: string;
+  timestamp: Date;
+  type: 'text' | 'system' | 'file';
+  replyTo?: string;
+}
+
+export interface WorkflowShare {
+  id: string;
+  workflowId: string;
+  shareToken: string;
+  permissions: 'view' | 'edit' | 'admin';
+  expiresAt?: Date;
+  createdBy: string;
+  createdAt: Date;
+}
+
+export interface CollaborationSession {
+  workflowId: string;
+  users: CollaborationUser[];
+  chat: ChatMessage[];
+  isVideoCallActive: boolean;
+  videoCallParticipants: string[];
+}
