@@ -1,35 +1,125 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { TaskType } from "@/lib/types";
 import { TaskRegistry } from "@/lib/workflow/task/Registry";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CoinsIcon } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { CoinsIcon, Wand2, Brain, Zap } from "lucide-react";
+import { ReinforcementWorkflowAI } from "@/lib/workflow-ai-engine";
+import { toast } from "sonner";
+import { createFlowNode } from "@/lib/workflow/CreateFlowNode";
+import { useReactFlow } from "@xyflow/react";
+
+const ai = new ReinforcementWorkflowAI();
 
 function TaskMenu() {
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [generatedWorkflow, setGeneratedWorkflow] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { setNodes, setEdges } = useReactFlow();
+
+  const generateAIWorkflow = async () => {
+    if (!aiPrompt.trim()) {
+      toast.error("Please enter a workflow description");
+      return;
+    }
+
+    setIsGenerating(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const workflow = ai.generateWorkflow(aiPrompt);
+    setGeneratedWorkflow(workflow);
+    setIsGenerating(false);
+    
+    toast.success("AI workflow generated!");
+  };
+
+  const addToCanvas = () => {
+    if (generatedWorkflow) {
+      try {
+        // Convert AI nodes to ReactFlow nodes with matching IDs
+        const flowNodes = generatedWorkflow.nodes.map((node: any) => {
+          const flowNode = createFlowNode(node.type, node.position);
+          return {
+            ...flowNode,
+            id: node.id, // Use AI-generated ID
+            position: node.position, // Ensure position is preserved
+            data: {
+              ...flowNode.data,
+              ...node.data // Preserve AI-generated data including inputs
+            }
+          };
+        });
+        
+        // Convert AI edges to ReactFlow edges
+        const flowEdges = generatedWorkflow.edges.map((edge: any) => ({
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          animated: true
+        }));
+        
+        // Add to canvas
+        setNodes(flowNodes);
+        setEdges(flowEdges);
+        
+        // Record successful workflow generation
+        ai.recordSuccess(aiPrompt, true);
+        
+        toast.success(`${generatedWorkflow.title} added to canvas!`);
+        setGeneratedWorkflow(null);
+        setAiPrompt("");
+      } catch (error) {
+        // Record failed workflow generation
+        ai.recordSuccess(aiPrompt, false);
+        toast.error("Failed to add workflow to canvas");
+        console.error("Canvas integration error:", error);
+      }
+    }
+  };
+
+  const provideFeedback = (helpful: boolean) => {
+    if (generatedWorkflow) {
+      generatedWorkflow.nodes.forEach((node: any) => {
+        ai.recordNodeFeedback(node.type, helpful);
+      });
+      toast.success(helpful ? "Thanks for the positive feedback!" : "Thanks for the feedback, we'll improve!");
+    }
+  };
+
   return (
-    <aside className="w-[340px] min-w-[340px] max-w-[340px] border-r-2 border-separate h-full p-2 px-4 overflow-auto">
-      <Accordion
-        type="multiple"
-        className="w-full"
-        defaultValue={[
-          "core",
-          "google",
-          "communication",
-          "ai",
-          "data",
-          "database",
-          "storage",
-          "utilities",
-        ]}
-      >
+    <aside className="w-[340px] min-w-[340px] max-w-[340px] border-r-2 border-separate h-full overflow-hidden">
+      <Tabs defaultValue="nodes" className="h-full flex flex-col">
+        <TabsList className="grid w-full grid-cols-2 m-2">
+          <TabsTrigger value="nodes">Nodes</TabsTrigger>
+          <TabsTrigger value="ai">AI</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="nodes" className="flex-1 overflow-auto p-2 px-4">
+          <Accordion
+            type="multiple"
+            className="w-full"
+            defaultValue={[
+              "core",
+              "google",
+              "communication",
+              "ai",
+              "data",
+              "database",
+              "storage",
+              "utilities",
+            ]}
+          >
         <AccordionItem value="core">
           <AccordionTrigger className="font-bold">
             Core Triggers
@@ -120,7 +210,120 @@ function TaskMenu() {
             <TaskMenuButton taskType={TaskType.NOTION} />
           </AccordionContent>
         </AccordionItem>
-      </Accordion>
+          </Accordion>
+        </TabsContent>
+        
+        <TabsContent value="ai" className="flex-1 overflow-auto p-4 space-y-4">
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Brain className="w-4 h-4 text-purple-600" />
+                <h3 className="font-semibold text-purple-800 text-sm">AI Workflow Builder</h3>
+              </div>
+              <p className="text-xs text-purple-700">
+                Describe your workflow and AI will generate nodes with connections
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+              <Textarea
+                placeholder="e.g., Send daily email reports from Google Sheets data"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                className="min-h-[80px] text-sm"
+              />
+              
+              <Button 
+                onClick={generateAIWorkflow}
+                disabled={isGenerating}
+                className="w-full"
+                size="sm"
+              >
+                <Wand2 className="w-4 h-4 mr-2" />
+                {isGenerating ? "Generating..." : "Generate Workflow"}
+              </Button>
+            </div>
+            
+            {generatedWorkflow && (
+              <Card className="p-3 space-y-3">
+                <div>
+                  <h4 className="font-semibold text-sm">{generatedWorkflow.title}</h4>
+                  <p className="text-xs text-muted-foreground">{generatedWorkflow.description}</p>
+                </div>
+                
+                <div>
+                  <p className="text-xs font-medium mb-2">Nodes ({generatedWorkflow.nodes.length}):</p>
+                  <div className="flex flex-wrap gap-1">
+                    {generatedWorkflow.nodes.map((node: any, index: number) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {node.data.label}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    <Zap className="w-3 h-3 mr-1" />
+                    {Math.round(generatedWorkflow.confidence * 100)}% confidence
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {generatedWorkflow.usage} uses
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2">
+                  <Button 
+                    onClick={addToCanvas}
+                    size="sm"
+                    className="w-full"
+                  >
+                    Add to Canvas
+                  </Button>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => provideFeedback(true)}
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 text-green-600 border-green-200"
+                    >
+                      👍 Helpful
+                    </Button>
+                    <Button 
+                      onClick={() => provideFeedback(false)}
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 text-red-600 border-red-200"
+                    >
+                      👎 Not Helpful
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
+            
+            <div className="space-y-2">
+              <p className="text-xs font-medium">Quick Examples:</p>
+              {[
+                "Email automation with AI replies",
+                "Daily data processing pipeline",
+                "Social media content scheduler"
+              ].map((example, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs h-auto p-2 text-left justify-start"
+                  onClick={() => setAiPrompt(example)}
+                >
+                  {example}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </aside>
   );
 }

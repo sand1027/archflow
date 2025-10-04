@@ -3,6 +3,8 @@ import {
   Layers2Icon,
   ShieldCheckIcon,
   BoxesIcon,
+  Brain,
+  Zap,
 } from "lucide-react";
 
 export const routes = [
@@ -26,6 +28,16 @@ export const routes = [
     href: "/credentials",
     label: "Credentials",
     icon: ShieldCheckIcon,
+  },
+  {
+    href: "/ai-keys",
+    label: "AI Keys",
+    icon: Brain,
+  },
+  {
+    href: "/demo-keys",
+    label: "Demo Keys",
+    icon: Zap,
   },
 ];
 
