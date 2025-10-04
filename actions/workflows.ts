@@ -98,6 +98,33 @@ export async function updateWorkFlow({
   revalidatePath("/workflows");
 }
 
+export async function updateSharedWorkFlow({
+  id,
+  definition,
+}: {
+  id: string;
+  definition: string;
+}) {
+  const { userId } = await requireAuth();
+
+  await connectDB();
+  const workflow = await Workflow.findById(id);
+
+  if (!workflow) {
+    throw new Error("Workflow not found");
+  }
+
+  if (workflow.status !== WorkflowStatus.DRAFT) {
+    throw new Error("Workflow is not draft");
+  }
+
+  await Workflow.findByIdAndUpdate(
+    id,
+    { definition, updatedAt: new Date() }
+  );
+  revalidatePath("/workflows");
+}
+
 export async function getWorkflowExecutionWithPhases(executionId: string) {
   const { userId } = await requireAuth();
 

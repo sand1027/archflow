@@ -6,7 +6,11 @@ const publicRoutes = [
   "/auth/signin",
   "/auth/error",
   "/api/auth",
-  "/api/workflows",
+  "/api/workflows/share", // Only allow share validation API
+];
+
+const protectedRoutes = [
+  "/workflow/shared", // Shared workflows require auth but should be accessible
 ];
 
 export default withAuth(
@@ -16,6 +20,14 @@ export default withAuth(
     // Allow public routes
     if (publicRoutes.some(route => pathname.startsWith(route))) {
       return NextResponse.next();
+    }
+    
+    // For protected routes like shared workflows, redirect with callback URL
+    if (protectedRoutes.some(route => pathname.startsWith(route))) {
+      if (!req.nextauth.token) {
+        const callbackUrl = encodeURIComponent(req.url);
+        return NextResponse.redirect(new URL(`/auth/signin?callbackUrl=${callbackUrl}`, req.url));
+      }
     }
     
     // Redirect to signin if not authenticated
@@ -29,7 +41,16 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
-        return publicRoutes.some(route => pathname.startsWith(route)) || !!token;
+        // Allow public routes without authentication
+        if (publicRoutes.some(route => pathname.startsWith(route))) {
+          return true;
+        }
+        // Protected routes require authentication
+        if (protectedRoutes.some(route => pathname.startsWith(route))) {
+          return !!token;
+        }
+        // All other routes require authentication
+        return !!token;
       },
     },
   }
