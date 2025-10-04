@@ -27,6 +27,8 @@ export enum TaskType {
   TELEGRAM = "TELEGRAM",
   EMAIL = "EMAIL",
   SMS = "SMS",
+  MICROSOFT_TEAMS = "MICROSOFT_TEAMS",
+  WHATSAPP = "WHATSAPP",
   
   // Social Media
   TWITTER = "TWITTER",
@@ -51,6 +53,9 @@ export enum TaskType {
   OPENAI = "OPENAI",
   ANTHROPIC = "ANTHROPIC",
   HUGGING_FACE = "HUGGING_FACE",
+  AI_WORKFLOW_BUILDER = "AI_WORKFLOW_BUILDER",
+  SMART_NODE_SUGGESTIONS = "SMART_NODE_SUGGESTIONS",
+  AI_DATA_TRANSFORMER = "AI_DATA_TRANSFORMER",
   
   // Database
   MYSQL = "MYSQL",
@@ -73,6 +78,17 @@ export enum TaskType {
   AIRTABLE = "AIRTABLE",
   TODOIST = "TODOIST",
   ASANA = "ASANA",
+  ZAPIER_IMPORT = "ZAPIER_IMPORT",
+  
+  // Education
+  CANVAS_LMS = "CANVAS_LMS",
+  BLACKBOARD = "BLACKBOARD",
+  COURSERA = "COURSERA",
+  EDX = "EDX",
+  CITATION_GENERATOR = "CITATION_GENERATOR",
+  STUDY_TIMER = "STUDY_TIMER",
+  ZOOM = "ZOOM",
+  GOOGLE_MEET = "GOOGLE_MEET",
   
   // Utilities
   DELAY = "DELAY",
@@ -251,3 +267,42 @@ export type WorkflowExecutionType = Record<
     failed: number;
   }
 >;
+
+// Collaboration Types
+export interface CollaborationUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  cursor?: { x: number; y: number };
+  selection?: string[];
+  isOnline: boolean;
+  lastSeen: Date;
+}
+
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  message: string;
+  timestamp: Date;
+  type: 'text' | 'system' | 'file';
+  replyTo?: string;
+}
+
+export interface WorkflowShare {
+  id: string;
+  workflowId: string;
+  shareToken: string;
+  permissions: 'view' | 'edit' | 'admin';
+  expiresAt?: Date;
+  createdBy: string;
+  createdAt: Date;
+}
+
+export interface CollaborationSession {
+  workflowId: string;
+  users: CollaborationUser[];
+  chat: ChatMessage[];
+  isVideoCallActive: boolean;
+  videoCallParticipants: string[];
+}

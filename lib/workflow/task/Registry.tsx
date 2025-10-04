@@ -30,6 +30,16 @@ import { PostgreSQLTask } from "./PostgreSQL";
 import { AWSS3Task } from "./AWSS3";
 import { DropboxTask } from "./Dropbox";
 import { OneDriveTask } from "./OneDrive";
+import { MicrosoftTeamsTask } from "./MicrosoftTeams";
+import { WhatsAppTask } from "./WhatsApp";
+import { ZapierImportTask } from "./ZapierImport";
+import { AIWorkflowBuilderTask } from "./AIWorkflowBuilder";
+import { SmartNodeSuggestionsTask } from "./SmartNodeSuggestions";
+import { AIDataTransformerTask } from "./AIDataTransformer";
+import { CanvasLMSTask } from "./CanvasLMS";
+import { CitationGeneratorTask } from "./CitationGenerator";
+import { StudyTimerTask } from "./StudyTimer";
+import { ZoomTask } from "./Zoom";
 
 type Registry = {
   [key in TaskType]: WorkflowTask & { type: key };
@@ -55,6 +65,8 @@ export const TaskRegistry = {
   TELEGRAM: DiscordTask,
   EMAIL: GmailTask,
   SMS: HttpRequestTask,
+  MICROSOFT_TEAMS: MicrosoftTeamsTask,
+  WHATSAPP: WhatsAppTask,
   
   // Social Media
   TWITTER: HttpRequestTask,
@@ -79,6 +91,9 @@ export const TaskRegistry = {
   OPENAI: OpenAITask,
   ANTHROPIC: AnthropicTask,
   HUGGING_FACE: HuggingFaceTask,
+  AI_WORKFLOW_BUILDER: AIWorkflowBuilderTask,
+  SMART_NODE_SUGGESTIONS: SmartNodeSuggestionsTask,
+  AI_DATA_TRANSFORMER: AIDataTransformerTask,
   
   // Database
   MONGODB: MongoDBTask,
@@ -101,6 +116,17 @@ export const TaskRegistry = {
   AIRTABLE: HttpRequestTask,
   TODOIST: HttpRequestTask,
   ASANA: HttpRequestTask,
+  ZAPIER_IMPORT: ZapierImportTask,
+  
+  // Education
+  CANVAS_LMS: CanvasLMSTask,
+  BLACKBOARD: CanvasLMSTask,
+  COURSERA: HttpRequestTask,
+  EDX: HttpRequestTask,
+  CITATION_GENERATOR: CitationGeneratorTask,
+  STUDY_TIMER: StudyTimerTask,
+  ZOOM: ZoomTask,
+  GOOGLE_MEET: HttpRequestTask,
   
   // Utilities
   DELAY: StartTask,
