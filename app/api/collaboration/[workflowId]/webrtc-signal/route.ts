@@ -14,6 +14,13 @@ export async function POST(
 
   const signal = await request.json();
   const workflowId = params.workflowId;
+  
+  console.log(`🔄 WebRTC Signal received:`, {
+    type: signal.type,
+    from: signal.fromUserId,
+    to: signal.targetUserId,
+    workflow: workflowId
+  });
 
   const signalEvent = {
     type: 'webrtc-signal',

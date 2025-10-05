@@ -10,7 +10,6 @@ export async function POST(request: NextRequest, { params }: { params: { workflo
   
   await connectDB();
   
-  // Save message to database
   await ChatMessage.create({
     workflowId,
     userId: message.userId,
