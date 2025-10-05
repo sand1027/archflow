@@ -22,8 +22,6 @@ interface Props {
   hideButtons?: boolean;
   isPublished?: boolean;
   workflow?: any;
-  isCollaborationMode?: boolean;
-  onToggleCollaboration?: () => void;
 }
 
 function Topbar({
@@ -33,8 +31,6 @@ function Topbar({
   hideButtons = false,
   isPublished = false,
   workflow,
-  isCollaborationMode = false,
-  onToggleCollaboration,
 }: Props) {
   const router = useRouter();
 
@@ -59,18 +55,7 @@ function Topbar({
       <div className="flex gap-1 flex-1 justify-end">
         {!hideButtons && (
           <Fragment>
-            {onToggleCollaboration && (
-              <TooltipWrapper content={isCollaborationMode ? "Exit Collaboration" : "Enter Collaboration"}>
-                <Button 
-                  variant={isCollaborationMode ? "default" : "outline"} 
-                  size="sm" 
-                  onClick={onToggleCollaboration}
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  {isCollaborationMode ? "Exit" : "Collaborate"}
-                </Button>
-              </TooltipWrapper>
-            )}
+
             <ShareButton workflowId={workflowId} />
             <ViewDataButton />
             <ImportButton />

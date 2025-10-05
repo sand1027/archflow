@@ -7,6 +7,8 @@ export class WebRTCService {
   private ws: WebSocket | null = null;
   private workflowId: string;
   private userId: string;
+  private reconnectAttempts: Map<string, number> = new Map();
+  private maxReconnectAttempts = 3;
 
   constructor(workflowId: string, userId: string) {
     this.workflowId = workflowId;
@@ -20,12 +22,31 @@ export class WebRTCService {
 
   async startCall(videoEnabled: boolean = true, audioEnabled: boolean = true) {
     try {
-      this.localStream = await navigator.mediaDevices.getUserMedia({
-        video: videoEnabled,
-        audio: audioEnabled
-      });
+      console.log('🎥 Getting user media - video:', videoEnabled, 'audio:', audioEnabled);
+      
+      // Always request audio, video based on parameter
+      const constraints: MediaStreamConstraints = {
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        },
+        video: videoEnabled ? {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 30 }
+        } : false
+      };
+      
+      this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      console.log('📹 Got local stream:', this.localStream.id, 'tracks:', this.localStream.getTracks().length);
+      console.log('Audio tracks:', this.localStream.getAudioTracks().length, 'Video tracks:', this.localStream.getVideoTracks().length);
       
       await this.initializeWebSocket();
+      
+      // Send join-call signal to establish connections with existing users
+      console.log('📡 Sending join-call signal');
       await this.sendSignalingMessage({ type: 'join-call', userId: this.userId });
       
       return this.localStream;
@@ -41,24 +62,24 @@ export class WebRTCService {
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
         { urls: 'stun:stun2.l.google.com:19302' }
-      ]
+      ],
+      iceCandidatePoolSize: 10
     });
 
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => {
+        console.log('Adding track:', track.kind, 'enabled:', track.enabled);
         pc.addTrack(track, this.localStream!);
       });
     }
 
     pc.ontrack = (event) => {
-      console.log('Received track from:', remoteUserId, 'streams:', event.streams.length, 'tracks:', event.streams[0]?.getTracks().length);
+      console.log('📡 Track received from:', remoteUserId, 'kind:', event.track.kind);
       if (event.streams && event.streams[0]) {
         const stream = event.streams[0];
-        console.log('Stream details - video tracks:', stream.getVideoTracks().length, 'audio tracks:', stream.getAudioTracks().length);
+        console.log('📹 Stream received - video:', stream.getVideoTracks().length, 'audio:', stream.getAudioTracks().length);
         this.remoteStreams.set(remoteUserId, stream);
         this.onRemoteStream?.(remoteUserId, stream);
-      } else {
-        console.warn('No streams in track event from:', remoteUserId);
       }
     };
 
@@ -72,6 +93,19 @@ export class WebRTCService {
       }
     };
 
+    pc.onconnectionstatechange = () => {
+      console.log('Connection state changed for', remoteUserId, ':', pc.connectionState);
+      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+        this.handleConnectionFailure(remoteUserId);
+      } else if (pc.connectionState === 'connected') {
+        this.reconnectAttempts.delete(remoteUserId);
+      }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE connection state changed for', remoteUserId, ':', pc.iceConnectionState);
+    };
+
     this.peerConnections.set(remoteUserId, pc);
     return pc;
   }
@@ -81,9 +115,13 @@ export class WebRTCService {
     try {
       switch (data.type) {
         case 'join-call':
-          if (data.userId !== this.userId) {
-            console.log('Creating offer for new user:', data.userId);
-            await this.createOffer(data.userId);
+          const joinUserId = data.fromUserId || data.userId;
+          if (joinUserId && joinUserId !== this.userId) {
+            console.log('🤝 Creating offer for new user:', joinUserId);
+            await this.createOffer(joinUserId);
+          } else if (joinUserId === this.userId) {
+            console.log('🔄 My own join-call signal, checking for existing participants');
+            // This is our own join signal, we need to wait for others to create offers to us
           }
           break;
         
@@ -105,9 +143,10 @@ export class WebRTCService {
           break;
         
         case 'leave-call':
-          if (data.userId !== this.userId) {
-            console.log('User left call:', data.userId);
-            this.handleUserLeft(data.userId);
+          const leaveUserId = data.fromUserId || data.userId;
+          if (leaveUserId && leaveUserId !== this.userId) {
+            console.log('User left call:', leaveUserId);
+            this.handleUserLeft(leaveUserId);
           }
           break;
       }
@@ -170,22 +209,14 @@ export class WebRTCService {
 
   private async handleIceCandidate(data: any) {
     if (data.targetUserId && data.targetUserId !== this.userId) {
-      console.log('ICE candidate not for us, ignoring');
       return; // This candidate is not for us
     }
     
-    console.log('Processing ICE candidate from:', data.fromUserId);
+    console.log('✅ Processing ICE candidate from:', data.fromUserId);
     const pc = this.peerConnections.get(data.fromUserId);
-    if (pc) {
-      console.log('Peer connection state:', pc.signalingState, 'has remote description:', !!pc.remoteDescription);
-      if (pc.remoteDescription) {
-        console.log('Adding ICE candidate');
-        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-      } else {
-        console.warn('No remote description set, cannot add ICE candidate');
-      }
-    } else {
-      console.warn('No peer connection found for ICE candidate from:', data.fromUserId);
+    if (pc && pc.remoteDescription) {
+      console.log('➕ Adding ICE candidate');
+      await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
     }
   }
 
@@ -211,7 +242,31 @@ export class WebRTCService {
     if (this.localStream) {
       this.localStream.getAudioTracks().forEach(track => {
         track.enabled = enabled;
+        console.log('Audio track enabled:', enabled, 'track state:', track.readyState);
       });
+    }
+  }
+
+  private async handleConnectionFailure(remoteUserId: string) {
+    const attempts = this.reconnectAttempts.get(remoteUserId) || 0;
+    if (attempts < this.maxReconnectAttempts) {
+      console.log(`Attempting to reconnect to ${remoteUserId} (attempt ${attempts + 1})`);
+      this.reconnectAttempts.set(remoteUserId, attempts + 1);
+      
+      // Close existing connection
+      const pc = this.peerConnections.get(remoteUserId);
+      if (pc) {
+        pc.close();
+        this.peerConnections.delete(remoteUserId);
+      }
+      
+      // Wait a bit before reconnecting
+      setTimeout(() => {
+        this.createOffer(remoteUserId);
+      }, 1000 * (attempts + 1));
+    } else {
+      console.log(`Max reconnection attempts reached for ${remoteUserId}`);
+      this.handleUserLeft(remoteUserId);
     }
   }
 
@@ -224,6 +279,7 @@ export class WebRTCService {
     this.peerConnections.forEach(pc => pc.close());
     this.peerConnections.clear();
     this.remoteStreams.clear();
+    this.reconnectAttempts.clear();
     
     this.sendSignalingMessage({ type: 'leave-call', userId: this.userId });
   }

@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Video, VideoOff, Mic, MicOff, Phone, Send, Users, MessageSquare } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MessageSquare, Lock } from "lucide-react";
 import { CollaborationUser, ChatMessage } from "@/lib/types";
 import { WebRTCService } from "@/lib/webrtc-service";
+import { CollaborationHeader } from "./collaboration/CollaborationHeader";
+import { VideoCallArea } from "./collaboration/VideoCallArea";
+import { ActiveUsers } from "./collaboration/ActiveUsers";
+import { TeamChat } from "./collaboration/TeamChat";
+import { PrivateChat } from "./collaboration/PrivateChat";
 
 interface CollaborationPanelProps {
   workflowId: string;
@@ -18,187 +18,348 @@ interface CollaborationPanelProps {
 
 export function CollaborationPanel({ workflowId, currentUser }: CollaborationPanelProps) {
   const [users, setUsers] = useState<CollaborationUser[]>([currentUser]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [privateMessages, setPrivateMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('team');
+  const [selectedUser, setSelectedUser] = useState<CollaborationUser | null>(null);
   
+  // Video/Voice call state
+  const [isInCall, setIsInCall] = useState(false);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
+  const [callInProgress, setCallInProgress] = useState(false);
+  const [callInitiator, setCallInitiator] = useState<string | null>(null);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const webrtcService = useRef<WebRTCService | null>(null);
+  
+  const getPrivateChatId = (userId1: string, userId2: string) => {
+    const sortedIds = [userId1, userId2].sort();
+    return `private-${sortedIds[0]}-${sortedIds[1]}`;
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   useEffect(() => {
-    // Load chat history and active users
+    scrollToBottom();
+  }, [messages.length, privateMessages.length]);
+
+  // Load initial data and setup SSE
+  useEffect(() => {
     const loadData = async () => {
       try {
-        const [messagesResponse, usersResponse] = await Promise.all([
-          fetch(`/api/collaboration/${workflowId}/messages`),
+        // Load from localStorage first
+        const savedTeamMessages = localStorage.getItem(`team-messages-${workflowId}`);
+        if (savedTeamMessages) {
+          setMessages(JSON.parse(savedTeamMessages));
+        }
+
+        const [teamMessagesRes, usersRes] = await Promise.all([
+          fetch(`/api/collaboration/${workflowId}/messages?type=team`),
           fetch(`/api/collaboration/${workflowId}/active-users`)
         ]);
-        
-        if (messagesResponse.ok) {
-          const history = await messagesResponse.json();
-          setMessages(history);
-        }
-        
-        if (usersResponse.ok) {
-          const activeUsers = await usersResponse.json();
-          setUsers(prev => {
-            const hasCurrentUser = prev.find(u => u.id === currentUser.id);
-            if (!hasCurrentUser) {
-              return [currentUser, ...activeUsers.filter((u: any) => u.id !== currentUser.id)];
+
+        if (teamMessagesRes.ok) {
+          const teamHistory = await teamMessagesRes.json();
+          // Merge server data with local data
+          const localMessages = savedTeamMessages ? JSON.parse(savedTeamMessages) : [];
+          const mergedMessages = [...localMessages];
+          
+          teamHistory.forEach((serverMsg: ChatMessage) => {
+            if (!mergedMessages.find(m => m.id === serverMsg.id)) {
+              mergedMessages.push(serverMsg);
             }
-            return [...prev, ...activeUsers.filter((u: any) => !prev.find(p => p.id === u.id))];
           });
+          
+          mergedMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          setMessages(mergedMessages);
+          localStorage.setItem(`team-messages-${workflowId}`, JSON.stringify(mergedMessages));
         }
+
+        if (usersRes.ok) {
+          const activeUsers = await usersRes.json();
+          setUsers(activeUsers);
+          localStorage.removeItem(`call-${workflowId}`);
+        }
+
+        setIsLoading(false);
       } catch (error) {
         console.error('Failed to load data:', error);
+        const savedMessages = localStorage.getItem(`team-messages-${workflowId}`);
+        if (savedMessages) {
+          setMessages(JSON.parse(savedMessages));
+        }
+        setIsLoading(false);
       }
     };
-    
-    loadData();
-    
-    // Connect to SSE stream for real-time updates
-    const eventSource = new EventSource(`/api/collaboration/${workflowId}/stream`);
-    
 
+    loadData();
+
+    // Setup SSE connection
+    const eventSource = new EventSource(`/api/collaboration/${workflowId}/stream`);
+    eventSourceRef.current = eventSource;
     
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         
-        if (data.type === 'user-joined') {
-          console.log('👤 User joined:', data.user.name, 'ID:', data.user.id);
-          setUsers(prev => {
-            const exists = prev.find(u => u.id === data.user.id);
-            if (exists) return prev;
-            return [...prev, data.user];
-          });
-        } else if (data.type === 'user-left') {
-          console.log('👤 User left:', data.userId);
-          setUsers(prev => prev.filter(u => u.id !== data.userId));
-        } else if (data.type === 'users-list') {
-          console.log('👥 Users list received:', data.users.length, 'users');
-          setUsers(prev => {
-            const hasCurrentUser = prev.find(u => u.id === currentUser.id);
-            if (!hasCurrentUser) {
-              return [currentUser, ...data.users.filter((u: any) => u.id !== currentUser.id)];
-            }
-            return prev;
-          });
-        } else if (data.type === 'new-message') {
-          setMessages(prev => [...prev, data.message]);
-        } else if (data.type === 'webrtc-signal') {
-          // Handle WebRTC signaling for video calls
-          console.log('Received WebRTC signal:', data.signal);
-          console.log('Current WebRTC service exists:', !!webrtcService.current);
-          console.log('Is video call active:', isVideoCallActive);
-          
-          // Auto-join call if someone else starts it (only once)
-          if (data.signal.type === 'join-call' && data.signal.userId !== currentUser.id && !isVideoCallActive && !isJoiningCall.current && currentUser.id !== 'anonymous') {
-            console.log('Auto-joining call started by:', data.signal.userId, 'Current user:', currentUser.id);
-            console.log('Current users list:', users.map(u => ({ id: u.id, name: u.name })));
-            isJoiningCall.current = true;
-            startVideoCall().then(() => {
-              // Handle the join-call signal after WebRTC service is initialized
-              if (webrtcService.current) {
-                webrtcService.current.handleSignalingMessage(data.signal);
-              }
-            }).finally(() => {
-              isJoiningCall.current = false;
+        switch (data.type) {
+          case 'user-joined':
+            setUsers(prev => {
+              const exists = prev.find(u => u.id === data.user.id);
+              if (exists) return prev;
+              return [...prev, data.user];
             });
-          } else if (webrtcService.current) {
-            console.log('🔄 Handling WebRTC signal:', data.signal.type, 'from:', data.signal.fromUserId);
-            webrtcService.current.handleSignalingMessage(data.signal);
-          } else {
-            console.warn('❌ WebRTC service not initialized, ignoring signal:', data.signal.type);
-          }
+            break;
+            
+          case 'user-left':
+            setUsers(prev => prev.filter(u => u.id !== data.userId));
+            break;
+            
+          case 'users-list':
+            setUsers(data.users);
+            break;
+            
+          case 'new-message':
+            if (data.isPrivate) {
+              if (data.targetUserId === currentUser.id || data.message.userId === currentUser.id) {
+                const otherUserId = data.message.userId === currentUser.id ? data.targetUserId : data.message.userId;
+                const chatId = getPrivateChatId(currentUser.id, otherUserId);
+                
+                // Update localStorage
+                const saved = localStorage.getItem(`private-messages-${chatId}`);
+                const existing = saved ? JSON.parse(saved) : [];
+                if (!existing.find((m: ChatMessage) => m.id === data.message.id)) {
+                  const updated = [...existing, data.message];
+                  localStorage.setItem(`private-messages-${chatId}`, JSON.stringify(updated));
+                  
+                  // Update UI if viewing this chat
+                  if (selectedUser?.id === otherUserId) {
+                    setPrivateMessages(updated);
+                  }
+                }
+              }
+            } else {
+              setMessages(prev => {
+                if (prev.find(m => m.id === data.message.id)) return prev;
+                const updated = [...prev, data.message];
+                localStorage.setItem(`team-messages-${workflowId}`, JSON.stringify(updated));
+                return updated;
+              });
+            }
+            break;
+            
+          case 'call-started':
+            setCallInProgress(true);
+            setCallInitiator(data.userId);
+            localStorage.setItem(`call-${workflowId}`, JSON.stringify({
+              callInProgress: true,
+              callInitiator: data.userId,
+              participants: [data.userId]
+            }));
+            if (data.userId === currentUser.id) {
+              setIsInCall(true);
+            }
+            break;
+            
+          case 'call-ended':
+            setCallInProgress(false);
+            setCallInitiator(null);
+            setIsInCall(false);
+            setLocalStream(null);
+            setRemoteStreams(new Map());
+            localStorage.removeItem(`call-${workflowId}`);
+            break;
+            
+          case 'user-left-call':
+            setRemoteStreams(prev => {
+              const newMap = new Map(prev);
+              newMap.delete(data.userId);
+              return newMap;
+            });
+            // Update participants list
+            const leftCallState = localStorage.getItem(`call-${workflowId}`);
+            if (leftCallState) {
+              try {
+                const state = JSON.parse(leftCallState);
+                const participants = (state.participants || []).filter((id: string) => id !== data.userId);
+                localStorage.setItem(`call-${workflowId}`, JSON.stringify({
+                  ...state,
+                  participants
+                }));
+              } catch (e) {
+                console.warn('Failed to update participants:', e);
+              }
+            }
+            break;
+            
+          case 'user-joined-call':
+            if (data.userId === currentUser.id) {
+              setIsInCall(true);
+            }
+            // Update participants list
+            const joinCallState = localStorage.getItem(`call-${workflowId}`);
+            if (joinCallState) {
+              try {
+                const state = JSON.parse(joinCallState);
+                const participants = state.participants || [];
+                if (!participants.includes(data.userId)) {
+                  participants.push(data.userId);
+                  localStorage.setItem(`call-${workflowId}`, JSON.stringify({
+                    ...state,
+                    participants
+                  }));
+                }
+              } catch (e) {
+                console.warn('Failed to update participants:', e);
+              }
+            }
+            break;
+            
+          case 'webrtc-signal':
+            if (webrtcService.current) {
+              webrtcService.current.handleSignalingMessage(data.signal);
+            }
+            break;
         }
       } catch (error) {
-        console.error('Error parsing SSE data:', error);
+        console.error('SSE parsing error:', error);
       }
     };
-    
+
+    eventSource.onerror = (error) => {
+      console.error('SSE connection error:', error);
+      if (eventSource.readyState === EventSource.CLOSED) {
+        setTimeout(() => {
+          if (!eventSourceRef.current || eventSourceRef.current.readyState === EventSource.CLOSED) {
+            const newEventSource = new EventSource(`/api/collaboration/${workflowId}/stream`);
+            eventSourceRef.current = newEventSource;
+            newEventSource.onmessage = eventSource.onmessage;
+            newEventSource.onerror = eventSource.onerror;
+          }
+        }, 2000);
+      }
+    };
+
     return () => {
       eventSource.close();
-      if (webrtcService.current) {
-        webrtcService.current.endCall();
-      }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workflowId, currentUser.id]);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [isVideoCallActive, setIsVideoCallActive] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
-  const webrtcService = useRef<WebRTCService | null>(null);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideosRef = useRef<Map<string, HTMLVideoElement>>(new Map());
-  const isJoiningCall = useRef(false);
+  }, [workflowId, currentUser.id, selectedUser?.id]);
 
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return;
-    
+  const sendMessage = async (messageText: string, isPrivate: boolean) => {
+    if (!messageText.trim()) return;
+    if (isPrivate && !selectedUser) return;
+
     const message: ChatMessage = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${currentUser.id}`,
       userId: currentUser.id,
-      message: newMessage,
+      message: messageText.trim(),
       timestamp: new Date(),
       type: 'text'
     };
-    
-    // Save to database and broadcast
+
+    // Optimistic update
+    if (isPrivate) {
+      const newPrivateMessages = [...privateMessages, message];
+      setPrivateMessages(newPrivateMessages);
+      const chatId = getPrivateChatId(currentUser.id, selectedUser!.id);
+      localStorage.setItem(`private-messages-${chatId}`, JSON.stringify(newPrivateMessages));
+    } else {
+      const newTeamMessages = [...messages, message];
+      setMessages(newTeamMessages);
+      localStorage.setItem(`team-messages-${workflowId}`, JSON.stringify(newTeamMessages));
+    }
+
     try {
-      await fetch(`/api/collaboration/${workflowId}`, {
+      await fetch(`/api/collaboration/${workflowId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
+        body: JSON.stringify({ 
+          message, 
+          isPrivate,
+          chatId: isPrivate ? getPrivateChatId(currentUser.id, selectedUser!.id) : `team-${workflowId}`,
+          targetUserId: isPrivate ? selectedUser!.id : undefined,
+          workflowId
+        })
       });
-      
-      // Broadcast to other users via SSE (don't add locally, SSE will handle it)
+
       await fetch(`/api/collaboration/${workflowId}/broadcast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
+        body: JSON.stringify({ 
+          type: 'new-message',
+          message,
+          isPrivate,
+          targetUserId: isPrivate ? selectedUser!.id : undefined
+        })
       });
-      setNewMessage("");
     } catch (error) {
       console.error('Failed to send message:', error);
+      if (isPrivate) {
+        setPrivateMessages(prev => prev.filter(m => m.id !== message.id));
+      } else {
+        setMessages(prev => prev.filter(m => m.id !== message.id));
+      }
     }
   };
 
-  const startVideoCall = useCallback(async (): Promise<void> => {
-    if (isVideoCallActive || isJoiningCall.current) {
-      console.log('Call already active or joining, ignoring');
-      return;
+  const selectUserForPrivateChat = async (user: CollaborationUser) => {
+    setSelectedUser(user);
+    setActiveTab('private');
+    
+    const chatId = getPrivateChatId(currentUser.id, user.id);
+    
+    // Load from localStorage first
+    const saved = localStorage.getItem(`private-messages-${chatId}`);
+    if (saved) {
+      setPrivateMessages(JSON.parse(saved));
+    } else {
+      setPrivateMessages([]);
     }
     
-    if (currentUser.id === 'anonymous') {
-      console.warn('Anonymous users cannot start video calls');
-      return;
+    // Then fetch from server and merge
+    try {
+      const response = await fetch(`/api/collaboration/${workflowId}/messages?type=private&chatId=${chatId}`);
+      if (response.ok) {
+        const serverHistory = await response.json();
+        const localMessages = saved ? JSON.parse(saved) : [];
+        const mergedMessages = [...localMessages];
+        
+        serverHistory.forEach((serverMsg: ChatMessage) => {
+          if (!mergedMessages.find(m => m.id === serverMsg.id)) {
+            mergedMessages.push(serverMsg);
+          }
+        });
+        
+        mergedMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        setPrivateMessages(mergedMessages);
+        localStorage.setItem(`private-messages-${chatId}`, JSON.stringify(mergedMessages));
+      }
+    } catch (error) {
+      console.error('Failed to load private messages:', error);
     }
+  };
+
+  const startCall = useCallback(async (withVideo: boolean) => {
+    if (isInCall || callInProgress) return;
     
     try {
-      console.log('Initializing WebRTC service for user:', currentUser.id);
       webrtcService.current = new WebRTCService(workflowId, currentUser.id);
       
       webrtcService.current.onRemoteStream = (userId: string, stream: MediaStream) => {
-        console.log('🎥 RECEIVED REMOTE STREAM from:', userId, 'Stream tracks:', stream.getTracks().length);
-        console.log('Stream video tracks:', stream.getVideoTracks().length, 'audio tracks:', stream.getAudioTracks().length);
-        console.log('Stream active:', stream.active, 'Stream ID:', stream.id);
+        console.log('🎥 Received remote stream from:', userId, 'tracks:', stream.getTracks().length);
         setRemoteStreams(prev => {
-          const newMap = new Map(prev.set(userId, stream));
-          console.log('✅ Updated remote streams map size:', newMap.size);
-          console.log('All remote stream users:', Array.from(newMap.keys()));
+          const newMap = new Map(prev);
+          newMap.set(userId, stream);
+          console.log('📺 Updated remote streams, total:', newMap.size);
           return newMap;
         });
-        
-        // Force video element update after React renders
-        setTimeout(() => {
-          const videoElement = remoteVideosRef.current.get(userId);
-          if (videoElement && stream) {
-            console.log('📺 Setting remote video stream for user:', userId);
-            videoElement.srcObject = stream;
-            // Don't call play here - let the video element handle it with autoPlay
-          } else {
-            console.warn('❌ Remote video element not found for user:', userId);
-          }
-        }, 200);
       };
       
       webrtcService.current.onUserLeft = (userId: string) => {
@@ -209,239 +370,224 @@ export function CollaborationPanel({ workflowId, currentUser }: CollaborationPan
         });
       };
       
-      const stream = await webrtcService.current.startCall(isVideoEnabled, !isMuted);
-      setLocalStream(stream);
-      setIsVideoCallActive(true);
+      const stream = await webrtcService.current.startCall(withVideo, !isMuted);
       
-      // Set video stream after state update
-      setTimeout(() => {
-        if (localVideoRef.current && stream) {
-          console.log('Setting local video stream, tracks:', stream.getTracks().length);
-          localVideoRef.current.srcObject = stream;
-          localVideoRef.current.play().catch(e => console.error('Failed to play local video:', e));
-        } else {
-          console.warn('Local video ref or stream not available');
-        }
-      }, 100);
+      setLocalStream(stream);
+      setIsInCall(true);
+      setIsVideoEnabled(withVideo);
+      setCallInProgress(true);
+      setCallInitiator(currentUser.id);
+      
+      await fetch(`/api/collaboration/${workflowId}/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          type: 'call-started',
+          userId: currentUser.id,
+          withVideo
+        })
+      });
     } catch (error) {
-      console.error('Failed to start video call:', error);
+      console.error('Failed to start call:', error);
     }
-  }, [workflowId, currentUser.id, isVideoEnabled, isMuted, isVideoCallActive]);
+  }, [workflowId, currentUser.id, isInCall, isMuted, callInProgress]);
 
-  const endVideoCall = () => {
+  const joinCall = useCallback(async (withVideo: boolean = true) => {
+    if (isInCall) return;
+    
+    try {
+      webrtcService.current = new WebRTCService(workflowId, currentUser.id);
+      
+      webrtcService.current.onRemoteStream = (userId: string, stream: MediaStream) => {
+        console.log('🎥 Received remote stream from:', userId, 'tracks:', stream.getTracks().length);
+        setRemoteStreams(prev => {
+          const newMap = new Map(prev);
+          newMap.set(userId, stream);
+          console.log('📺 Updated remote streams, total:', newMap.size);
+          return newMap;
+        });
+      };
+      
+      webrtcService.current.onUserLeft = (userId: string) => {
+        setRemoteStreams(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(userId);
+          return newMap;
+        });
+      };
+      
+      const stream = await webrtcService.current.startCall(withVideo, !isMuted);
+      
+      setLocalStream(stream);
+      setIsInCall(true);
+      setIsVideoEnabled(withVideo);
+      
+      await fetch(`/api/collaboration/${workflowId}/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          type: 'user-joined-call',
+          userId: currentUser.id,
+          withVideo
+        })
+      });
+      
+      console.log('✅ Join call complete - isInCall:', true);
+    } catch (error) {
+      console.error('Failed to join call:', error);
+      setIsInCall(false);
+      setLocalStream(null);
+    }
+  }, [workflowId, currentUser.id, isInCall, isMuted]);
+
+  const leaveCall = useCallback(async () => {
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+    }
+    
     if (webrtcService.current) {
       webrtcService.current.endCall();
-      webrtcService.current = null;
     }
+    
     setLocalStream(null);
     setRemoteStreams(new Map());
-    setIsVideoCallActive(false);
-    isJoiningCall.current = false;
-  };
+    setIsInCall(false);
+    
+    // Get current participants
+    const leaveCallState = localStorage.getItem(`call-${workflowId}`);
+    let participants: string[] = [];
+    if (leaveCallState) {
+      try {
+        const state = JSON.parse(leaveCallState);
+        participants = (state.participants || []).filter((id: string) => id !== currentUser.id);
+      } catch (e) {
+        console.warn('Failed to parse call state:', e);
+      }
+    }
+    
+    // End call for everyone only if no participants remain
+    if (participants.length === 0) {
+      setCallInProgress(false);
+      setCallInitiator(null);
+      localStorage.removeItem(`call-${workflowId}`);
+      
+      await fetch(`/api/collaboration/${workflowId}/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          type: 'call-ended',
+          userId: currentUser.id
+        })
+      });
+    } else {
+      await fetch(`/api/collaboration/${workflowId}/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          type: 'user-left-call',
+          userId: currentUser.id
+        })
+      });
+    }
+  }, [workflowId, currentUser.id, localStream]);
 
   const toggleMute = () => {
-    const newMuted = !isMuted;
-    setIsMuted(newMuted);
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
     if (webrtcService.current) {
-      webrtcService.current.toggleAudio(!newMuted);
+      webrtcService.current.toggleAudio(!newMutedState);
     }
   };
 
   const toggleVideo = () => {
-    const newVideoEnabled = !isVideoEnabled;
-    setIsVideoEnabled(newVideoEnabled);
+    const newVideoState = !isVideoEnabled;
+    setIsVideoEnabled(newVideoState);
     if (webrtcService.current) {
-      webrtcService.current.toggleVideo(newVideoEnabled);
+      webrtcService.current.toggleVideo(newVideoState);
     }
+  };
+
+  if (isLoading) {
+    return (
+      <aside className="w-[340px] min-w-[340px] max-w-[340px] border-l-2 border-separate h-full flex items-center justify-center">
+        <div className="text-sm text-muted-foreground">Loading...</div>
+      </aside>
+    );
+  }
+
+  const otherUsers = users.filter(u => u.id !== currentUser.id);
+
+  const handleTeamMessage = (message: string) => {
+    sendMessage(message, false);
+  };
+
+  const handlePrivateMessage = (message: string) => {
+    sendMessage(message, true);
   };
 
   return (
     <aside className="w-[340px] min-w-[340px] max-w-[340px] border-l-2 border-separate h-full overflow-hidden flex flex-col">
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Collaboration
-          </h3>
-          <Badge variant="secondary">{users.length} online</Badge>
-        </div>
-        
-        {/* Video Call Controls */}
-        <div className="flex gap-2">
-          {!isVideoCallActive ? (
-            <Button size="sm" onClick={startVideoCall} className="flex-1">
-              <Video className="w-4 h-4 mr-2" />
-              Start Call
-            </Button>
-          ) : (
-            <div className="flex gap-1 flex-1">
-              <Button size="sm" variant="outline" onClick={toggleMute}>
-                {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              </Button>
-              <Button size="sm" variant="outline" onClick={toggleVideo}>
-                {isVideoEnabled ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-              </Button>
-              <Button size="sm" variant="destructive" onClick={endVideoCall}>
-                <Phone className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      <CollaborationHeader
+        userCount={users.length}
+        isInCall={isInCall}
+        callInProgress={callInProgress}
+        callInitiator={callInitiator}
+        currentUserId={currentUser.id}
+        isMuted={isMuted}
+        isVideoEnabled={isVideoEnabled}
+        onStartCall={startCall}
+        onJoinCall={joinCall}
+        onLeaveCall={leaveCall}
+        onToggleMute={toggleMute}
+        onToggleVideo={toggleVideo}
+      />
 
-      {/* Online Users */}
-      <div className="p-2 border-b">
-        <h4 className="text-sm font-medium mb-1">Online Users</h4>
-        <div className="space-y-1">
-          {users.map((user) => (
-            <div key={user.id} className="flex items-center gap-2">
-              <Avatar className="w-5 h-5">
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback className="text-xs">
-                  {user.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-xs flex-1">{user.name}</span>
-              <div className={`w-2 h-2 rounded-full ${user.isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
-            </div>
-          ))}
-        </div>
-      </div>
+      <VideoCallArea
+        isInCall={isInCall}
+        callInProgress={callInProgress}
+        isVideoEnabled={isVideoEnabled}
+        localStream={localStream}
+        remoteStreams={remoteStreams}
+        users={users}
+      />
 
-      {/* Video Call Area */}
-      {isVideoCallActive && (
-        <div className="p-2 border-b bg-gray-900 text-white">
-          {/* Local Video */}
-          <div className="relative mb-2">
-            <video
-              ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-full h-24 bg-gray-800 rounded object-cover"
-              onLoadedMetadata={() => {
-                console.log('Local video metadata loaded');
-                if (localVideoRef.current) {
-                  localVideoRef.current.play().catch(e => console.error('Local video play error:', e));
-                }
-              }}
-              onCanPlay={() => {
-                console.log('Local video can play');
-              }}
-              onError={(e) => {
-                console.error('Local video error:', e);
-              }}
-            />
-            <div className="absolute bottom-1 left-1 text-xs bg-black/50 px-1 rounded">
-              You {!isVideoEnabled && '(Video Off)'}
-            </div>
-          </div>
+      {!isInCall && !callInProgress && <ActiveUsers users={users} />}
+
+      <div className="flex flex-col flex-1 min-h-0">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+          <TabsList className="grid w-full grid-cols-2 mx-2 mt-1 shrink-0">
+            <TabsTrigger value="team" className="text-xs">
+              <MessageSquare className="w-3 h-3 mr-1" />
+              Team
+            </TabsTrigger>
+            <TabsTrigger value="private" className="text-xs">
+              <Lock className="w-3 h-3 mr-1" />
+              Private
+            </TabsTrigger>
+          </TabsList>
           
-          {/* Remote Videos */}
-          {(() => {
-            console.log('🎬 Rendering remote videos section, count:', remoteStreams.size, 'users:', Array.from(remoteStreams.keys()));
-            return null;
-          })()}
-          {remoteStreams.size === 0 && (
-            <div className="text-xs text-center text-gray-400 mb-2">
-              Waiting for other participants... ({users.length} users online)
-            </div>
-          )}
-          {Array.from(remoteStreams.entries()).map(([userId, stream]) => {
-            const user = users.find(u => u.id === userId);
-            console.log('🎥 Rendering remote video for user:', userId, 'stream active:', stream.active, 'tracks:', stream.getTracks().length);
-            return (
-              <div key={userId} className="relative mb-2">
-                <video
-                  ref={(el) => {
-                    if (el) {
-                      console.log('Setting up remote video element for user:', userId);
-                      remoteVideosRef.current.set(userId, el);
-                      if (stream && el.srcObject !== stream) {
-                        console.log('Setting srcObject for remote video:', userId);
-                        el.srcObject = stream;
-                      }
-                    }
-                  }}
-                  autoPlay
-                  playsInline
-                  muted={false}
-                  className="w-full h-24 bg-gray-800 rounded object-cover"
-                  onCanPlay={(e) => {
-                    console.log('Remote video can play for user:', userId);
-                    const video = e.target as HTMLVideoElement;
-                    video.play().catch(e => console.error('Failed to play on canPlay:', e));
-                  }}
-                  onLoadedData={(e) => {
-                    console.log('Remote video data loaded for user:', userId);
-                  }}
-                  onError={(e) => {
-                    console.error('Remote video error for user:', userId, e);
-                  }}
-                />
-                <div className="absolute bottom-1 left-1 text-xs bg-black/50 px-1 rounded">
-                  {user?.name || 'Unknown User'}
-                </div>
-              </div>
-            );
-          })}
-          
-          <div className="text-xs text-center">
-            {users.filter(u => u.isOnline).length} participant{users.filter(u => u.isOnline).length !== 1 ? 's' : ''} online
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <div className="p-2 border-b">
-          <h4 className="text-xs font-medium flex items-center gap-2">
-            <MessageSquare className="w-3 h-3" />
-            Chat
-          </h4>
-        </div>
-        
-        <ScrollArea className="flex-1 p-2 max-h-[400px]">
-          <div className="space-y-3 pr-2">
-            {messages.map((message, index) => {
-              const user = users.find(u => u.id === message.userId) || 
-                          (message.userId === 'system' ? { name: 'System', avatar: '' } : null);
-              return (
-                <div key={message.id || `message-${index}`} className="flex gap-2">
-                  <Avatar className="w-6 h-6">
-                    <AvatarImage src={user?.avatar} />
-                    <AvatarFallback className="text-xs">
-                      {user?.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium">{user?.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : 'Now'}
-                      </span>
-                    </div>
-                    <p className="text-sm">{message.message}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
-        
-        <div className="p-2 border-t bg-background">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              className="flex-1 bg-background"
+          <TabsContent value="team" className="flex-1 min-h-0 mt-1">
+            <TeamChat
+              messages={messages}
+              users={users}
+              onSendMessage={handleTeamMessage}
+              messagesEndRef={messagesEndRef}
             />
-            <Button size="sm" onClick={sendMessage} disabled={!newMessage.trim()}>
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+          </TabsContent>
+          
+          <TabsContent value="private" className="flex-1 min-h-0 mt-1">
+            <PrivateChat
+              selectedUser={selectedUser}
+              privateMessages={privateMessages}
+              users={users}
+              otherUsers={otherUsers}
+              onSelectUser={selectUserForPrivateChat}
+              onSendMessage={handlePrivateMessage}
+              onBackToUserList={() => setSelectedUser(null)}
+              messagesEndRef={messagesEndRef}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </aside>
   );
