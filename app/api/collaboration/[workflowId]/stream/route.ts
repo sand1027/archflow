@@ -28,6 +28,8 @@ export async function GET(
         lastSeen: new Date(),
       };
       
+      console.log(`🔗 SSE Connection started for user: ${user.name} (${user.id}) in workflow: ${workflowId}`);
+      
       addConnection(workflowId, controller, user);
 
       const joinEvent = {
@@ -35,19 +37,26 @@ export async function GET(
         user
       };
       
+      console.log(`📡 Broadcasting user-joined event:`, joinEvent);
       controller.enqueue(`data: ${JSON.stringify(joinEvent)}\n\n`);
       broadcastToWorkflow(workflowId, joinEvent);
     },
     
     cancel() {
+      const userId = session.user.id || "anonymous";
+      console.log(`🔌 SSE Connection closed for user: ${session.user.name} (${userId}) in workflow: ${workflowId}`);
+      
       if (streamController) {
-        removeConnection(workflowId, streamController, session.user.id || "anonymous");
+        removeConnection(workflowId, streamController, userId);
       }
       
-      broadcastToWorkflow(workflowId, {
+      const leaveEvent = {
         type: 'user-left',
-        userId: session.user.id || "anonymous"
-      });
+        userId
+      };
+      
+      console.log(`📡 Broadcasting user-left event:`, leaveEvent);
+      broadcastToWorkflow(workflowId, leaveEvent);
     }
   });
 

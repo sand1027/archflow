@@ -13,20 +13,13 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { message } = await request.json();
+  const body = await request.json();
   const workflowId = params.workflowId;
 
-  const messageEvent = {
-    type: 'new-message',
-    message: {
-      ...message,
-      userId: session.user.id || "anonymous",
-      timestamp: new Date(),
-    }
-  };
+  const event = body;
 
   // Broadcast to ALL users including sender
-  broadcastToWorkflow(workflowId, messageEvent);
+  broadcastToWorkflow(workflowId, event);
   
   return NextResponse.json({ success: true });
 }

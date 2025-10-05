@@ -12,17 +12,6 @@ import { WorkflowStatus, CollaborationUser } from "@/lib/types";
 import { useSession } from "next-auth/react";
 
 function Editor({ workflow }: { workflow: any }) {
-  const { data: session } = useSession();
-  const [isCollaborationMode, setIsCollaborationMode] = React.useState(false);
-  
-  const currentUser: CollaborationUser = {
-    id: session?.user?.id || "anonymous",
-    name: session?.user?.name || "User",
-    email: session?.user?.email || "",
-    isOnline: true,
-    lastSeen: new Date(),
-  };
-
   return (
     <FlowValidationContextProvider>
       <ReactFlowProvider>
@@ -33,18 +22,10 @@ function Editor({ workflow }: { workflow: any }) {
             workflowId={workflow._id.toString()}
             isPublished={workflow.status === WorkflowStatus.PUBLISHED}
             workflow={workflow}
-            isCollaborationMode={isCollaborationMode}
-            onToggleCollaboration={() => setIsCollaborationMode(!isCollaborationMode)}
           />
           <section className="flex h-full overflow-auto">
             <TaskMenu />
             <FlowEditor workflow={workflow} />
-            {isCollaborationMode && (
-              <CollaborationPanel 
-                workflowId={workflow._id.toString()}
-                currentUser={currentUser}
-              />
-            )}
           </section>
         </div>
       </ReactFlowProvider>
